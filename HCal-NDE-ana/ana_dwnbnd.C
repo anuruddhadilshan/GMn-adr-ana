@@ -6,7 +6,6 @@
 #include "eventclass.h"
 #include "outputclass.h"
 
-
 void print_analysis_percentage(double cuurentevent_ana_percentage, int& previousevent_ana_percentage_int);
 // void make_pdf(TCanvas* c[nCanvas], TString output_PDF_filename);
 
@@ -18,14 +17,16 @@ void ana_dwnbnd(const char* configfilename, const char* outputfilename = "dwnben
 
 	int num_SBSkine = configfile.return_SBSKineNum();
 	// Copying cut thresholds to local variables //
-	double cut_BBTrVzCut = configfile.return_BBTrVzCut();
+	double cut_MinGEMHitsOnTrack = configfile.return_MinGEMHitsOnTrack();
+	double cut_VzCutUpStream = configfile.return_VzCutUpStream();
+	double cut_VzCutDwnStream = configfile.return_VzCutDwnStream();
 	double cut_HCalE = configfile.return_HCalECut();
 	double cut_CoinCutLow = configfile.return_CoinCutLow();
 	double cut_CoinCutHigh = configfile.return_CoinCutHigh();
 	double cut_RCut = configfile.return_RCut();
 		
 	// Define an object from the event class.
-	Event event{ C, num_SBSkine, cut_BBTrVzCut, cut_HCalE, cut_CoinCutLow, cut_CoinCutHigh, cut_RCut };
+	Event event{ C, num_SBSkine, cut_MinGEMHitsOnTrack, cut_VzCutUpStream, cut_VzCutDwnStream, cut_HCalE, cut_CoinCutLow, cut_CoinCutHigh, cut_RCut };
 
 	// Define an object fomr the Output class.
 	Output output{ event, outputfilename };

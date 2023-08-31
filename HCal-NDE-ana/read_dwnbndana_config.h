@@ -10,13 +10,15 @@ private:
 	//Defining the variables read in by the configuration file.
 	TChain* m_C = new TChain("T");
 	int m_SBSKine{9}; // Default to SBS 9.
+	double m_MinGEMHitsOnTrack{0.}; 
 	double m_HCalECut{0.};
 	double m_CoinCutLow{0.};
 	double m_CoinCutHigh{0.};
 	double m_HCalAdcTimeCutLow{0.};
 	double m_HCalAdcTimeCutHigh{0.};
 	// double m_BBTrPCut{0.};
-	double m_BBTrVzCut{0.};
+	double m_VzCutUpStream{0.};
+	double m_VzCutDwnStream{0.};
 	double m_RCut{0.};
 
 public:
@@ -59,6 +61,13 @@ public:
 		    			std::cout << "SBS kinematic setting number: " << m_SBSKine << '\n';
 		    		}
 
+		    		if ( skey == "MinGEMHitsOnTrack" )
+		    		{
+		    			TString sval = ( (TObjString*)(*tokens)[1] )->GetString();
+		    			m_MinGEMHitsOnTrack = sval.Atof();
+		    			std::cout << "Min. # of GEM hits on track: " << m_MinGEMHitsOnTrack << '\n';
+		    		}
+
 		    		if( skey == "HCalECut" )
 		    		{
 		    			TString sval = ( (TObjString*)(*tokens)[1] )->GetString();
@@ -87,11 +96,18 @@ public:
 		    		// 	std::cout << "BigBite track momentum cut (GeV/c): " << m_BBTrPCut << '\n';
 		    		// }
 
-		    		if( skey == "BBTrVzCut" )
+		    		if( skey == "VzCutUpStream" )
 		    		{
 		    			TString sval = ( (TObjString*)(*tokens)[1] )->GetString();
-		    			m_BBTrVzCut = sval.Atof();
-		    			std::cout << "BigBite track Vertex Z position cut (m): " << m_BBTrVzCut << '\n';
+		    			m_VzCutUpStream = sval.Atof();
+		    			std::cout << "BigBite track Vertex Z position upstream cut (m): " << m_VzCutUpStream << '\n';
+		    		}
+
+		    		if( skey == "VzCutDwnStream" )
+		    		{
+		    			TString sval = ( (TObjString*)(*tokens)[1] )->GetString();
+		    			m_VzCutDwnStream = sval.Atof();
+		    			std::cout << "BigBite track Vertex Z position downstream cut (m): " << m_VzCutDwnStream << '\n';
 		    		}
 
 		    		if( skey == "RCut" )
@@ -122,9 +138,19 @@ public:
 		return m_SBSKine;
 	}
 
-	double return_BBTrVzCut()
+	double return_MinGEMHitsOnTrack()
 	{
-		return m_BBTrVzCut;
+		return m_MinGEMHitsOnTrack;
+	}
+
+	double return_VzCutDwnStream()
+	{
+		return m_VzCutDwnStream;
+	}
+
+	double return_VzCutUpStream()
+	{
+		return m_VzCutUpStream;
 	}
 
 	double return_HCalECut()

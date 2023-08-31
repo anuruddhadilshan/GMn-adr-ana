@@ -16,7 +16,9 @@ private:
 	// Read-in from the main script.
 	TChain* m_C; // TChain that holds the "T" TTree(s) of input replayed ROOT file(s).
 	const int m_SBSKineNum; 
-	const double m_cut_BBTrVzCut;
+	const double m_cut_MinGEMHitsOnTrack;
+	const double m_cut_VzCutUpStream;
+	const double m_cut_VzCutDwnStream;
 	const double m_cut_HCalE;
 	const double m_cut_CoinCutLow;
 	const double m_cut_CoinCutHigh;
@@ -33,6 +35,13 @@ private:
 	double m_bbtrpx[m_MAXNTRACKS];
 	double m_bbtrpy[m_MAXNTRACKS];
 	double m_bbtrpz[m_MAXNTRACKS];
+	double m_bbtrrx[m_MAXNTRACKS];
+	// double m_bbtrry[m_MAXNTRACKS];
+	// double m_bbtrrz[m_MAXNTRACKS];
+	double m_bbtrrth[m_MAXNTRACKS];
+	double m_bbtrchi2[m_MAXNTRACKS];
+	double m_bbtrndof[m_MAXNTRACKS];
+	double m_bbgemtrnhits[m_MAXNTRACKS];
 	double m_sbshcale{0.};
 	double m_sbshcalx{0.};
 	double m_sbshcaly{0.};
@@ -54,8 +63,8 @@ private:
 		
 public:
 
-	Event(TChain* C, int num_SBSKine, double cut_BBTrVzCut, double cut_HCalE, double cut_CoinCutLow, double cut_CoinCutHigh, double cut_RCut) 
-	: m_C{C}, m_SBSKineNum{num_SBSKine}, m_cut_BBTrVzCut{cut_BBTrVzCut}, m_cut_HCalE{cut_HCalE}, m_cut_CoinCutLow{cut_CoinCutLow}, m_cut_CoinCutHigh{cut_CoinCutHigh}, m_cut_RCut{cut_RCut}, m_kininfo{num_SBSKine}, m_Ebeam{m_kininfo.return_BeamEnergy()}, m_photonecut{m_kininfo.return_BeamEnergy()+m_kininfo.return_BeamEnergy()*0.03}, m_HCaldist{m_kininfo.return_HCalDis()}, m_HCalangle{m_kininfo.return_HCalTheta()}
+	Event(TChain* C, int num_SBSKine, double cut_MinGEMHitsOnTrack, double cut_VzCutUpStream, double cut_VzCutDwnStream, double cut_HCalE, double cut_CoinCutLow, double cut_CoinCutHigh, double cut_RCut) 
+	: m_C{C}, m_SBSKineNum{num_SBSKine}, m_cut_MinGEMHitsOnTrack{cut_MinGEMHitsOnTrack}, m_cut_VzCutUpStream{cut_VzCutUpStream}, m_cut_VzCutDwnStream{cut_VzCutDwnStream}, m_cut_HCalE{cut_HCalE}, m_cut_CoinCutLow{cut_CoinCutLow}, m_cut_CoinCutHigh{cut_CoinCutHigh}, m_cut_RCut{cut_RCut}, m_kininfo{num_SBSKine}, m_Ebeam{m_kininfo.return_BeamEnergy()}, m_photonecut{m_kininfo.return_BeamEnergy()+m_kininfo.return_BeamEnergy()*0.03}, m_HCaldist{m_kininfo.return_HCalDis()}, m_HCalangle{m_kininfo.return_HCalTheta()}
 	{
 		m_C->SetBranchStatus("*", 0);
 		m_C->SetBranchStatus("bb.tr.n",1);
@@ -66,6 +75,13 @@ public:
 		m_C->SetBranchStatus("bb.tr.px", 1);
 		m_C->SetBranchStatus("bb.tr.py", 1);
 		m_C->SetBranchStatus("bb.tr.pz", 1);
+		m_C->SetBranchStatus("bb.tr.r_x", 1);
+		// m_C->SetBranchStatus("bb.tr.r_y", 1);
+		// m_C->SetBranchStatus("bb.tr.r_z", 1);
+		m_C->SetBranchStatus("bb.tr.r_th", 1);
+		m_C->SetBranchStatus("bb.tr.chi2", 1);
+		m_C->SetBranchStatus("bb.tr.ndof", 1);
+		m_C->SetBranchStatus("bb.gem.track.nhits", 1);
 		m_C->SetBranchStatus("sbs.hcal.x", 1);
 		m_C->SetBranchStatus("sbs.hcal.y", 1);
 		m_C->SetBranchStatus("sbs.hcal.e",1);
@@ -82,6 +98,13 @@ public:
 		m_C->SetBranchAddress("bb.tr.px", m_bbtrpx); 
 		m_C->SetBranchAddress("bb.tr.py", m_bbtrpy); 
 		m_C->SetBranchAddress("bb.tr.pz", m_bbtrpz);
+		m_C->SetBranchAddress("bb.tr.r_x", m_bbtrrx);
+		// m_C->SetBranchAddress("bb.tr.r_y", m_bbtrrx);
+		// m_C->SetBranchAddress("bb.tr.r_z", m_bbtrrx);
+		m_C->SetBranchAddress("bb.tr.r_th", m_bbtrrth);
+		m_C->SetBranchAddress("bb.tr.chi2", m_bbtrchi2);
+		m_C->SetBranchAddress("bb.tr.ndof", m_bbtrndof);
+		m_C->SetBranchAddress("bb.gem.track.nhits", m_bbgemtrnhits);
 		m_C->SetBranchAddress("sbs.hcal.x", &m_sbshcalx);
 		m_C->SetBranchAddress("sbs.hcal.y", &m_sbshcaly);
 		m_C->SetBranchAddress("sbs.hcal.e", &m_sbshcale);
@@ -108,7 +131,24 @@ private:
 
 		return true;
 	}
-	
+
+	// Since the BigBite optics model for downbending tracks may not work very well in significant regions of the acceprance - those tracks might not have good optics reconstruction.
+	bool pass_OpticsValiditiyCut() 
+	{
+		if ( abs(m_bbtrrx[0]-0.9*m_bbtrrth[0]) < 0.35 ) return true; // Specific numbers given by Andrew.
+
+		return false;
+	}
+
+	bool pass_TrackChi2Cut()
+	{
+		double chi2divndof = m_bbtrchi2[0] / m_bbtrndof[0];
+
+		if ( chi2divndof > 15 ) return false;
+
+		return true;
+	}
+
 	bool pass_EndPointCut() 
 	{
 		double E_gamma = m_Ebeam;
@@ -163,25 +203,22 @@ public:
 
 	bool passBigBiteCuts()
 	{	
+		// ***Track quality cuts*** //
+		// if ( m_bbtrn > 1 ) return false; // Number of tracks found in BigBite. Not being used as it is not an extremely useful cut to clean-up fake tracks?
+		if ( m_bbgemtrnhits[0] < m_cut_MinGEMHitsOnTrack ) return false; // Number of gem hits on track. Force to be 5 to reject false tracks. 
+		if ( !pass_TrackChi2Cut() ) return false; // Use only tracks with good chi2.
+		if ( m_bbtrvz[0] < m_cut_VzCutUpStream || m_bbtrvz[0] > m_cut_VzCutDwnStream  ) return false; // BigBite track vertex Z cut.
+		//// 
+
+		if ( !pass_OpticsValiditiyCut() ) return false; // ***Optics validity cut.***
 		
-		//if ( m_bbtrn > 1 ) return false; // Number of tracks found in BigBite.
-
-		if ( abs(m_bbtrvz[0]) > m_cut_BBTrVzCut ) return false; // BigBite track vertex Z cut.
-
-		//if ( m_bbpse > 0.25 ) return false; // PS energy anti cut: To reject electrons. 
-
-		//// *** Cuts that uses HCal data - DO NOT USE/COMMENT OUT for HCal neutron detection efficiency analysis. *** ////
-		//if ( m_sbshcale < m_cut_HCalE ) return false; // HCal energy cut. Only usef for preliminary analysis. NOT TO BE USED IN NEUTRON DET. EFF. CALC.
-
-		//      if ( !pass_HCalSHADCtime_coincut() ) return false; //BBCal and HCal ADC coincidence time cut. Only usef for preliminary analysis. NOT TO BE USED IN NEUTRON DET. EFF. CALC.
-		//pass_HCalSHADCtime_coincut(); 
-		// //// **** ////
-
-		if ( m_photone > m_photonecut ) return false; // Discard events with reconstructed photon energy larger than beam energy. Possibly the events from different processes?
+		if ( m_bbpse <= 0 || m_bbpse > 0.15 ) return false; // ***PS energy anti cut: To select pions and to reject zero energy PS events.***
+		
+		if ( m_photone > m_photonecut ) return false; // Discard events with reconstructed photon energy larger than beam energy plus some safety margin. Possibly the events from different processes?
 
 		if ( !pass_EndPointCut() ) return false; // ***End-point cut***
 
-		if ( !pass_WouldHitHCalCut() ) return false; // Predicted hit position on the neutron must be within the HCal active area (with safety margins considered) for the analysis to progress.
+		if ( !pass_WouldHitHCalCut() ) return false; // ***HCal active area cut***
  
 		return true;
 	}
@@ -400,12 +437,11 @@ public:
 private:
 
 	// HCal boundaries with safety margins in HCal coordinate system.
-	// Safety margin = Exclude the two outer columns and two outer blocks.
-	constexpr static double m_hcal_safetymargin_factor = 1;   
-	const double m_hcal_active_xlow_safe =  HCalConst::hcal_topXpos + m_hcal_safetymargin_factor*HCalConst::hcalblk_h;
-	const double m_hcal_active_xhigh_safe = HCalConst::hcal_botXpos - m_hcal_safetymargin_factor*HCalConst::hcalblk_h;
-	const double m_hcal_active_ylow_safe = HCalConst::hcal_rightYpos + m_hcal_safetymargin_factor*HCalConst::hcalblk_w;
-	const double m_hcal_active_yhigh_safe = HCalConst::hcal_leftYpos - m_hcal_safetymargin_factor*HCalConst::hcalblk_w;
+	// Safety margin = Exclude 1.5 rows/columns from the edges - Andrew suggestion.
+	const double m_hcal_active_xlow_safe =  -0.75 - 10.5*HCalConst::hcalblk_h;
+	const double m_hcal_active_xhigh_safe = -0.75 + 10.5*HCalConst::hcalblk_h;
+	const double m_hcal_active_ylow_safe = -4.5*HCalConst::hcalblk_w;
+	const double m_hcal_active_yhigh_safe = 4.5*HCalConst::hcalblk_w;
 
 public:
 

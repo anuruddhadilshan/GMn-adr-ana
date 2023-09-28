@@ -25,9 +25,8 @@ public:
 	}
 
 	void make_qdisvect(HCalVectors& hcal_vect)
-	{
-		m_hcalZdistancefromvertex = hcal_vect.return_hcalZdistancefromvertex();
-		double qdisvect_mag = m_hcalZdistancefromvertex / (hcal_vect.return_q3directionvect().Dot(hcal_vect.return_HCalZaxis()));
+	  	m_hcalZdistancefromvertex = hcal_vect.return_hcalZdistancefromvertex();
+		double qdisvect_mag = m_hcalZdistancefromvertex / (hcal_vect.return_q3directionvect().Dot(hcal_vect.return_HCalZaxis()));  
 		m_qdisvect = qdisvect_mag*hcal_vect.return_q3directionvect();
 	}
 

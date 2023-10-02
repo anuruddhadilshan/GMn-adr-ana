@@ -66,6 +66,8 @@ private:
 	TH2D* m_h2_bestclus_dxdy;
 	TH1D* m_h1_bestclus_1_dx;
 	TH1D* m_h1_bestclus_2_dx;
+	TH1D* m_h1_bestclus_3_dx;
+	TH1D* m_h1_bestclus_4_dx;
 	//TH2D* m_h2_sbs_neutron_hcal_dxdy;
 
 	// Diagnostics output histograms.
@@ -132,6 +134,8 @@ public:
 		m_h1_bestclus_dx = new TH1D("h1_bestclus_dx", "Best HCal Cluster from Timing+HE algorithm; dx (m)", 800, -4, 4);
 		m_h1_bestclus_1_dx = new TH1D("h1_bestclus_1_dx", "Best HCal Cluster -1; dx (m)", 800, -4, 4);
 		m_h1_bestclus_2_dx = new TH1D("h1_bestclus_2_dx", "Best HCal Cluster -2; dx (m)", 800, -4, 4);
+		m_h1_bestclus_3_dx = new TH1D("h1_bestclus_3_dx", "Best HCal Cluster -3; dx (m)", 800, -4, 4);
+		m_h1_bestclus_4_dx = new TH1D("h1_bestclus_4_dx", "Best HCal Cluster -4; dx (m)", 800, -4, 4);
 		m_h2_bestclus_dxdy = new TH2D("h2_bestclus_dxdy", "HCal Best Clus dx vs dy; dy = Y_{hcal}-Y_{predicted} (m); dx = X_{hcal}-X_{predicted} (m)", 400, -2, 2, 800, -4, 4);
 
 		// Diagnostic variables output histograms.
@@ -216,6 +220,8 @@ public:
 			{
 				m_h1_bestclus_1_dx->Fill(m_sbshcal_heclus_x[1] - m_predhcal_xpos);
 				m_h1_bestclus_2_dx->Fill(m_sbshcal_heclus_x[2] - m_predhcal_xpos);
+				m_h1_bestclus_3_dx->Fill(m_sbshcal_heclus_x[3] - m_predhcal_xpos);
+				m_h1_bestclus_4_dx->Fill(m_sbshcal_heclus_x[4] - m_predhcal_xpos);
 				return;
 			}
 
@@ -223,6 +229,8 @@ public:
 			{
 				m_h1_bestclus_1_dx->Fill(m_sbshcal_heclus_x[0] - m_predhcal_xpos);
 				m_h1_bestclus_2_dx->Fill(m_sbshcal_heclus_x[2] - m_predhcal_xpos);
+				m_h1_bestclus_3_dx->Fill(m_sbshcal_heclus_x[3] - m_predhcal_xpos);
+				m_h1_bestclus_4_dx->Fill(m_sbshcal_heclus_x[4] - m_predhcal_xpos);
 				return;
 			}
 
@@ -230,6 +238,26 @@ public:
 			{
 				m_h1_bestclus_1_dx->Fill(m_sbshcal_heclus_x[0] - m_predhcal_xpos);
 				m_h1_bestclus_2_dx->Fill(m_sbshcal_heclus_x[1] - m_predhcal_xpos);
+				m_h1_bestclus_3_dx->Fill(m_sbshcal_heclus_x[3] - m_predhcal_xpos);
+				m_h1_bestclus_4_dx->Fill(m_sbshcal_heclus_x[4] - m_predhcal_xpos);
+				return;
+			}
+
+			case 3:
+			{
+				m_h1_bestclus_1_dx->Fill(m_sbshcal_heclus_x[0] - m_predhcal_xpos);
+				m_h1_bestclus_2_dx->Fill(m_sbshcal_heclus_x[1] - m_predhcal_xpos);
+				m_h1_bestclus_3_dx->Fill(m_sbshcal_heclus_x[2] - m_predhcal_xpos);
+				m_h1_bestclus_4_dx->Fill(m_sbshcal_heclus_x[4] - m_predhcal_xpos);
+				return;
+			}
+
+			case 4:
+			{
+				m_h1_bestclus_1_dx->Fill(m_sbshcal_heclus_x[0] - m_predhcal_xpos);
+				m_h1_bestclus_2_dx->Fill(m_sbshcal_heclus_x[1] - m_predhcal_xpos);
+				m_h1_bestclus_3_dx->Fill(m_sbshcal_heclus_x[2] - m_predhcal_xpos);
+				m_h1_bestclus_4_dx->Fill(m_sbshcal_heclus_x[3] - m_predhcal_xpos);
 				return;
 			}
 
@@ -237,6 +265,8 @@ public:
 			{
 				m_h1_bestclus_1_dx->Fill(m_sbshcal_heclus_x[1] - m_predhcal_xpos);
 				m_h1_bestclus_2_dx->Fill(m_sbshcal_heclus_x[2] - m_predhcal_xpos);
+				m_h1_bestclus_3_dx->Fill(m_sbshcal_heclus_x[3] - m_predhcal_xpos);
+				m_h1_bestclus_4_dx->Fill(m_sbshcal_heclus_x[4] - m_predhcal_xpos);
 				return;	
 			}
 		}
@@ -261,6 +291,10 @@ public:
 		m_h1_bestclus_1_dx->Draw("same");
 		m_h1_bestclus_2_dx->SetLineColor(kBlue);
 		m_h1_bestclus_2_dx->Draw("same");
+		m_h1_bestclus_3_dx->SetLineColor(kMagenta);
+		m_h1_bestclus_3_dx->Draw("same");
+		m_h1_bestclus_4_dx->SetLineColor(kOrange);
+		m_h1_bestclus_4_dx->Draw("same");
 
 		TCanvas* C4 = new TCanvas();
 		m_h1_heclus_dx->SetLineColor(kRed);
@@ -269,7 +303,6 @@ public:
 		m_h1_heclus_dx->Draw();
 		m_h1_heclus_1_dx->Draw("same");
 		m_h1_heclus_2_dx->Draw("same");
-
 	}
 
 	void closeOutFile()
@@ -288,7 +321,9 @@ public:
 		m_h1_heclus_2_dx->Write();
 		m_h1_bestclus_dx->Write();
 		m_h1_bestclus_1_dx->Write();
-		m_h1_bestclus_2_dx->Write();		
+		m_h1_bestclus_2_dx->Write();
+		m_h1_bestclus_3_dx->Write();
+		m_h1_bestclus_4_dx->Write();		
 
 		m_h1_bb_tr_vz->Write();
 		//m_h1_adctimediff_hcalsh->Write();

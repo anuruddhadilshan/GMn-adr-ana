@@ -84,11 +84,15 @@ public:
 		const double cointime_heclus0 = m_sbshcal_heclus_atime[0] - m_shadctime;
 		const double cointime_heclus1 = m_sbshcal_heclus_atime[1] - m_shadctime;
 		const double cointime_heclus2 = m_sbshcal_heclus_atime[2] - m_shadctime;
+		const double cointime_heclus3 = m_sbshcal_heclus_atime[3] - m_shadctime;
+		const double cointime_heclus4 = m_sbshcal_heclus_atime[4] - m_shadctime;
 
 		if ( m_coincut_low < cointime_heclus0 && cointime_heclus0 < m_coincut_high ) m_besthcalclus_indx = 0;
 		else if ( m_coincut_low < cointime_heclus1 && cointime_heclus1 < m_coincut_high ) m_besthcalclus_indx = 1;
 		else if ( m_coincut_low < cointime_heclus2 && cointime_heclus2 < m_coincut_high ) m_besthcalclus_indx = 2;
-		else m_besthcalclus_indx = 0; // Default to the 0th element. Not attemting past the third higest energy cluster.
+		else if ( m_coincut_low < cointime_heclus3 && cointime_heclus3 < m_coincut_high ) m_besthcalclus_indx = 3;
+		else if ( m_coincut_low < cointime_heclus4 && cointime_heclus4 < m_coincut_high ) m_besthcalclus_indx = 4;
+		else m_besthcalclus_indx = 0; // Default to the 0th element. Not attemting past the fifth higest energy cluster.
 	}
 
 	int return_BestHCalClusIndx()

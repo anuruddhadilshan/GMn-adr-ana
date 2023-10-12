@@ -1,13 +1,13 @@
 #include <iostream>
 #include <string>
-#include "../includes/beam_variables.h"
-#include "../includes/HCalConstants.h"
-#include "read_dwnbndana_config.h"
-#include "eventclass.h"
-#include "outputclass.h"
+#include "../includes/read_dwnbndana_config.h"
+#include "../includes/eventclass.h"
+#include "../includes/outputclass.h"
+#include "../includes/besthcalclusnde.h" // Note the seperate class for HCal NDE ana from the elastic event ana.
+
 
 void print_analysis_percentage(double cuurentevent_ana_percentage, int& previousevent_ana_percentage_int);
-// void make_pdf(TCanvas* c[nCanvas], TString output_PDF_filename);
+
 
 void ana_dwnbnd(const char* configfilename, const char* outputfilename = "dwnbendanaplots")
 {
@@ -20,16 +20,22 @@ void ana_dwnbnd(const char* configfilename, const char* outputfilename = "dwnben
 	double cut_MinGEMHitsOnTrack = configfile.return_MinGEMHitsOnTrack();
 	double cut_VzCutUpStream = configfile.return_VzCutUpStream();
 	double cut_VzCutDwnStream = configfile.return_VzCutDwnStream();
-	double cut_HCalE = configfile.return_HCalECut();
-	double cut_CoinCutLow = configfile.return_CoinCutLow();
-	double cut_CoinCutHigh = configfile.return_CoinCutHigh();
+	double cut_CoinCutMean = configfile.return_CoinCutMean();
+	double cut_CoinCutSigma = configfile.return_CoinCutSigma();
+	double cut_CoinCutSigmaFactor = configfile.return_CoinCutSigmaFactor();
+	double cut_NeutronConeCutSigmaX = configfile.return_NeutronConeCutSigmaX();
+	double cut_NeutronConeCutSigmaY = configfile.return_NeutronConeCutSigmaY();
+	double cut_NeutronConeCutSigmaFactor = configfile.return_NeutronConeCutSigmaFactor();
 	double cut_RCut = configfile.return_RCut();
 		
 	// Define an object from the event class.
-	Event event{ C, num_SBSkine, cut_MinGEMHitsOnTrack, cut_VzCutUpStream, cut_VzCutDwnStream, cut_HCalE, cut_CoinCutLow, cut_CoinCutHigh, cut_RCut };
+	Event event{ C, num_SBSkine, cut_MinGEMHitsOnTrack, cut_VzCutUpStream, cut_VzCutDwnStream, cut_NeutronConeCutSigmaX, cut_NeutronConeCutSigmaY, cut_NeutronConeCutSigmaFactor, cut_RCut };
+
+	// Define an object from the BestHCalClus class.
+	BestHCalClus bestHCalClus{ event, cut_CoinCutMean, cut_CoinCutSigma, cut_CoinCutSigmaFactor };
 
 	// Define an object fomr the Output class.
-	Output output{ event, outputfilename };
+	Output output{ event, bestHCalClus, outputfilename };
 	
 	//Variables to keep track of printout to the terminal.
 	int previousevent_ana_percentage_int{0};
@@ -49,11 +55,17 @@ void ana_dwnbnd(const char* configfilename, const char* outputfilename = "dwnben
 		event.calc_PhotonE(); // Calculates the photon energy from the reaction: photon + p --> pi+ + n , using the measured BigBite track momentum.
 		event.calc_NeutronKin(); // Calculates the kinematics of the neutron for the reaction: photon + p --> pi+ + n, using bb.tr momentum information and reconstructed photon energy.
 		event.calc_NeutronHCalIntersect(); // Calculates the "predicted hit position" of the neutron using the calculated neutron kinematics.
-		event.calc_NeutronHCaldxdy(); // Calculates the "detected-predicted" hit positions on HCal.
-
-		// Applying Cuts... //
+		
+		// Applying BigBite Cuts --> Event selection for the numerator //
 		if ( !event.passBigBiteCuts() ) continue;	
 
+		bestHCalClus.findBestHCalClus(); // Find the best HCal cluster for the event using the HighestEnergy + In-Time algorithm.
+		
+		event.getBestHCalClusIndx( bestHCalClus.return_BestHCalClusIndx() );
+		event.calc_NeutronHCaldxdy_bestHCalclus(); // Calculates the "detected-predicted" hit positions on HCal.
+		
+		event.getDidPassCoinCut( bestHCalClus.return_DidPassCoinCut() );
+			
 		event.eval_HCalNDE_Rmthd();	
 		
 		output.copyFromEvent();

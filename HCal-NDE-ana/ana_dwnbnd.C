@@ -56,13 +56,15 @@ void ana_dwnbnd(const char* configfilename, const char* outputfilename = "dwnben
 		event.calc_NeutronKin(); // Calculates the kinematics of the neutron for the reaction: photon + p --> pi+ + n, using bb.tr momentum information and reconstructed photon energy.
 		event.calc_NeutronHCalIntersect(); // Calculates the "predicted hit position" of the neutron using the calculated neutron kinematics.
 		
-		// Applying BigBite Cuts --> Event selection for the numerator //
+		// Applying BigBite Cuts --> Event selection for the denominator //
 		if ( !event.passBigBiteCuts() ) continue;	
+		
+		event.calc_MinusMandlsMinust();
 
 		bestHCalClus.findBestHCalClus(); // Find the best HCal cluster for the event using the HighestEnergy + In-Time algorithm.
 		
 		event.getBestHCalClusIndx( bestHCalClus.return_BestHCalClusIndx() );
-		event.calc_NeutronHCaldxdy_bestHCalclus(); // Calculates the "detected-predicted" hit positions on HCal.
+		event.calc_NeutronHCaldxdy(); // Calculates the "detected-predicted" hit positions on HCal.
 		
 		event.getDidPassCoinCut( bestHCalClus.return_DidPassCoinCut() );
 			

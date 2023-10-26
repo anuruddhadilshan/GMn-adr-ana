@@ -22,12 +22,14 @@ private:
 	double m_bbtrpx{0.};
 	double m_bbtrpy{0.};
 	double m_bbshe{0.};
+	double m_bbshadctime{0.};
 	double m_bbpse{0.};
 	double m_bbshpse{0.};
 	double m_bbeoverp{0.};
 	double m_sbshcalx{0.};
 	double m_sbshcaly{0.};
 	double m_sbshcale{0.};
+	double m_sbshcaladctime{0.};
 	double m_adctimediffhcalsh{0.};
 	double m_bbphitgt{0.};
 	double m_bbpoltgt{0.};
@@ -36,6 +38,7 @@ private:
 	double m_sbsneutronpy{0.};
 	double m_sbsneutronpz{0.};
 	double m_sbsneutrone{0.};
+	double m_mandelstamminust{0.};
 	double m_sbsneutronhcalx{0.};
 	double m_sbsneutronhcaly{0.};
 	double m_sbsneutronhcaldx{0.};
@@ -98,16 +101,19 @@ public:
 		m_resultstree->Branch("bb.tr.px", &m_bbtrpx);
 		m_resultstree->Branch("bb.tr.py", &m_bbtrpy);
 		m_resultstree->Branch("bb.sh.e", &m_bbshe);
+		m_resultstree->Branch("bb.sh.atimeblk", &m_bbshadctime);
 		m_resultstree->Branch("bb.ps.e", &m_bbpse);
 		m_resultstree->Branch("bb.shps.e", &m_bbshpse);
 		m_resultstree->Branch("bb.eoverp", &m_bbeoverp);
 		m_resultstree->Branch("sbs.hcal.x", &m_sbshcalx);
 		m_resultstree->Branch("sbs.hcal.y", &m_sbshcaly);
 		m_resultstree->Branch("sbs.hcal.e", &m_sbshcale);
-		m_resultstree->Branch("adctimediff.hcalsh", &m_adctimediffhcalsh);
+		m_resultstree->Branch("sbs.hcal.atimeblk", &m_sbshcaladctime);
+		//m_resultstree->Branch("adctimediff.hcalsh", &m_adctimediffhcalsh);
 		m_resultstree->Branch("bb.phitgt", &m_bbphitgt);
 		m_resultstree->Branch("bb.poltgt", &m_bbpoltgt);
-		m_resultstree->Branch("beam.photon.e", &m_photone);
+		m_resultstree->Branch("ev.photon.e", &m_photone);
+		m_resultstree->Branch("ev.t", &m_mandelstamminust);
 		m_resultstree->Branch("sbs.neutronrecon.px", &m_sbsneutronpx);
 		m_resultstree->Branch("sbs.neutronrecon.py", &m_sbsneutronpy);
 		m_resultstree->Branch("sbs.neutronrecon.pz", &m_sbsneutronpz);
@@ -165,16 +171,19 @@ public:
 		m_bbtrpx = m_event.return_BBTrPx();
 		m_bbtrpy = m_event.return_BBtrPy();
 		m_bbshe = m_event.return_BBSHe();
+		m_bbshadctime = m_event.return_SHADCTime();
 		m_bbpse = m_event.return_BBPSe();
 		m_bbshpse = m_event.return_BBSHPSe();
 		m_bbeoverp = m_event.return_EoverP();
 		m_sbshcalx = m_event.return_SBSHCalx();
 		m_sbshcaly = m_event.return_SBSHCaly();
 		m_sbshcale = m_event.return_SBSHCale();
+		m_sbshcaladctime = m_event.return_SBSHCalADCTime();
 		m_adctimediffhcalsh = m_event.return_ADCTimeDiffHCalSH();
 		m_bbphitgt = m_event.return_BBphitgt();
 		m_bbpoltgt = m_event.return_BBpoltgt();
 		m_photone = m_event.return_PhotonE();
+		m_mandelstamminust = m_event.return_MandelstamMinust();
 		m_sbsneutronpx = m_event.return_NeutronPx();
 		m_sbsneutronpy = m_event.return_NeutronPy();
 		m_sbsneutronpz = m_event.return_NeutronPz();
@@ -343,7 +352,7 @@ public:
 	    for (int icanvas = 0; icanvas < m_ncutcanvas; icanvas++)
 		{
 			if(icanvas == 0) m_cutCan[icanvas]->Print(openfilename);
-			else	if (icanvas == m_ncutcanvas-1) m_cutCan[icanvas]->Print(closefilename);
+			else if (icanvas == m_ncutcanvas-1) m_cutCan[icanvas]->Print(closefilename);
 			else m_cutCan[icanvas]->Print(pdffilename);
 		}
 	}

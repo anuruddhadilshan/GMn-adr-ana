@@ -135,7 +135,7 @@ public:
 		m_C->SetBranchAddress("bb.ps.e", &m_bbpse);
 		m_C->SetBranchAddress("bb.sh.atimeblk", &m_shadctime);
 
-		m_hcal.make_HCal_vectors_NoVerticalOffset(m_HCaldist, m_HCalangle);
+		m_hcal.make_HCal_vectors_NoVerticalOffset(m_HCaldist, m_HCalangle);		
 	}
 
 	int getEntry(int n) //Copies the enries of the "T" to the above defined member variables.
@@ -258,6 +258,7 @@ private:
 
 	double m_bbtrpipluse{0.}; // Calculated Pi+'s total relativistic energy from bb.tr.p[0]
 	double m_photone{0.}; // Reconstructed photon energy of the reaction: gamma + p --> pi+ + n
+	double m_mandelstamminust{0.}; // Mandelstam -t.
 	double m_sbsneutronpx{0.}; // Calculated x component of the neutron momentum vector.
 	double m_sbsneutronpy{0.}; // Calculated y component of the neutron momentum vector.
 	double m_sbsneutronpz{0.}; // Calculated z component of the neutron momentum vector.
@@ -266,7 +267,9 @@ private:
 	double m_sbsneutronhcalx{0.}; // Calculated x hit position of the neutron in HCal local detector coordinates.
 	double m_sbsneutronhcaly{0.}; // Calculated y hit position of the neutron in HCal local detector coordinates.
 	double m_sbsneutronhcaldx{0.}; // X coordinate difference between the measured and prediceted neutron position values. 
-	double m_sbsneutronhcaldy{0.}; // Y coordinate difference between the measured and prediceted neutron position values.	
+	double m_sbsneutronhcaldy{0.}; // Y coordinate difference between the measured and prediceted neutron position values.
+	double m_sbsneutronhcalheclusdx{0.}; // dx using highest energy HCal cluster.
+	double m_sbsneutronhcalheclusdy{0.}; // dy using highest energy HCal cluster.
 	
 public: 
  
@@ -339,6 +342,24 @@ public:
 		m_sbsneutrone = pNeutron.E();
 	}
 
+	void calc_MinusMandlsMinust() // -t = -(pPhoton-pPiplus).M2()
+	{
+		ROOT::Math::PxPyPzEVector pPhoton; // 4-momentum of the incident photon.
+		ROOT::Math::PxPyPzEVector pPiplus; // 4-momentum of the pi+ as measured by BigBite.
+		double gamma_e = m_photone;
+		double piplus_px = m_bbtrpx[0];
+		double piplus_py = m_bbtrpy[0];
+		double piplus_pz = m_bbtrpz[0];
+		double piplus_e = m_bbtrpipluse;
+
+		pPhoton.SetPxPyPzE( 0, 0, gamma_e, gamma_e ); // Assumption: High energy photons are moving only in the +Z direction.
+		pPiplus.SetPxPyPzE( piplus_px, piplus_py, piplus_pz, piplus_e ); // 3 - Componets of the momentum as measured from BigBite. Energy calculated from the energy-momentum relationship.
+		
+		double mandelstam_minus_t = -(pPhoton - pPiplus).M2();
+
+		m_mandelstamminust = mandelstam_minus_t;
+	}
+
 	double return_NeutronPx()
 	{
 		return m_sbsneutronpx;
@@ -357,6 +378,11 @@ public:
 	double return_NeutronE()
 	{
 		return m_sbsneutrone;
+	}
+
+	double return_MandelstamMinust()
+	{
+		return m_mandelstamminust;
 	}
 
 	void calc_NeutronHCalIntersect() // Calculates the point of intersection of the neutron with HCal in HCal local coordinates. To be compared with sbs.hcal.dx and sbs.hcal.dy variables.
@@ -381,15 +407,17 @@ public:
 
 	void calc_NeutronHCaldxdy()
 	{
-		m_sbsneutronhcaldx = m_sbshcalx - m_sbsneutronhcalx;
-		m_sbsneutronhcaldy = m_sbshcaly - m_sbsneutronhcaly;		
+		m_sbsneutronhcalheclusdx = m_sbshcalx - m_sbsneutronhcalx;
+		m_sbsneutronhcalheclusdy = m_sbshcaly - m_sbsneutronhcaly;
+		m_sbsneutronhcaldx = m_sbshcal_heclus_x[m_besthcalclus_indx] - m_sbsneutronhcalx;
+		m_sbsneutronhcaldy = m_sbshcal_heclus_y[m_besthcalclus_indx] - m_sbsneutronhcaly;		
 	}
 
-	void calc_NeutronHCaldxdy_bestHCalclus()
-	{
-		m_sbsneutronhcaldx = m_sbshcal_heclus_x[m_besthcalclus_indx] - m_sbsneutronhcalx;
-		m_sbsneutronhcaldy = m_sbshcal_heclus_y[m_besthcalclus_indx] - m_sbsneutronhcaly;
-	}
+	// void calc_NeutronHCaldxdy_bestHCalclus()
+	// {
+	// 	m_sbsneutronhcaldx = m_sbshcal_heclus_x[m_besthcalclus_indx] - m_sbsneutronhcalx;
+	// 	m_sbsneutronhcaldy = m_sbshcal_heclus_y[m_besthcalclus_indx] - m_sbsneutronhcaly;
+	// }
 
 	double return_HCalNeutrondx()
 	{
@@ -430,15 +458,17 @@ private:
 	bool m_didpasscoin_cut {true}; // Did the best cluster pass the timing cut?. Only relevant to the case where the best cluster is defaulted to be the 0th cluster.
 
 	long m_nhcal_shouldhit{0};
-	long m_nhcal_didhit{0};
+	long m_nhcal_bestclus_didhit{0};
+	long m_nhcal_heclus_didhit{0};
 	double m_hcalneutron_r {0.};
-	bool m_hit_incircle{false};
+	bool m_bestclus_hit_incircle{false};
+	bool m_heclus_hit_incircle{false};
 	bool m_pass_hcalshcoincut{false};
 	bool m_pass_rmthd{false};
 
-	bool hit_In_Circle()
+	bool hit_In_Circle(double x, double y)
 	{
-		m_hcalneutron_r = std::sqrt( std::pow(m_sbsneutronhcaldx,2) + std::pow(m_sbsneutronhcaldy,2) );
+		m_hcalneutron_r = std::sqrt( std::pow(x,2) + std::pow(y,2) );
 
 		if ( m_hcalneutron_r <= m_cut_RCut )
 		{
@@ -463,18 +493,25 @@ public:
 	void eval_HCalNDE_Rmthd()
 	{
 		m_nhcal_shouldhit++; // Increment the should hit count by 1.
-		m_hit_incircle = hit_In_Circle(); // Is the HCal cluster inside the circle being considered?
-		
-		if ( m_hit_incircle && m_didpasscoin_cut )
+		m_bestclus_hit_incircle = hit_In_Circle(m_sbsneutronhcaldx, m_sbsneutronhcaldy); // Is the HCal cluster inside the circle being considered?
+		m_heclus_hit_incircle = hit_In_Circle(m_sbsneutronhcalheclusdx, m_sbsneutronhcalheclusdy);
+
+		if ( m_bestclus_hit_incircle && m_didpasscoin_cut )
 		// if ( m_hit_incircle )
 		{
-			m_nhcal_didhit++;
+			m_nhcal_bestclus_didhit++;
 			m_pass_rmthd = true;
 		}	
 		else
 		{
 			m_pass_rmthd = false;
 		}
+
+		if ( m_heclus_hit_incircle )
+		{
+			m_nhcal_heclus_didhit++;
+		}
+
 	}
 
 	double return_hcalneutronr()
@@ -484,7 +521,7 @@ public:
 
 	bool return_DidHitInCircle()
 	{
-		return m_hit_incircle;
+		return m_bestclus_hit_incircle;
 	}
 
 	bool return_DidPassHCalBBSH_ADCtime_Corr()
@@ -499,9 +536,15 @@ public:
 
 	void print_HCalNDE_Rmthd()
 	{	
+		std::cout << "### HCal NDE calculation using best HCal cluster from InTime+HEclus algorithm ###" << '\n';
 		std::cout << "Should hit: " << m_nhcal_shouldhit << '\n';
-		std::cout << "Did hit: " << m_nhcal_didhit << '\n';
-		std::cout << "*** HCal NDE from the R method: " << std::fixed << std::setprecision(1) << ((double)m_nhcal_didhit/(double)m_nhcal_shouldhit)*100 << "% ***\n";
+		std::cout << "Did hit: " << m_nhcal_bestclus_didhit << '\n';
+		std::cout << "*** HCal NDE from the R method: " << std::fixed << std::setprecision(1) << ((double)m_nhcal_bestclus_didhit/(double)m_nhcal_shouldhit)*100 << "% ***\n";
+
+		std::cout << "\n### HCal NDE calculation using highest energy HCal cluster ###" << '\n';
+		std::cout << "Should hit: " << m_nhcal_shouldhit << '\n';
+		std::cout << "Did hit: " << m_nhcal_heclus_didhit << '\n';
+		std::cout << "*** HCal NDE from the R method: " << std::fixed << std::setprecision(1) << ((double)m_nhcal_heclus_didhit/(double)m_nhcal_shouldhit)*100 << "% ***\n";
 	}
 
 	
@@ -571,6 +614,11 @@ public:
 	double return_SBSHCale()
 	{
 		return m_sbshcale;
+	}
+
+	double return_SBSHCalADCTime()
+	{
+		return m_hcaladctime;
 	}
 
 	double return_ADCTimeDiffHCalSH()

@@ -1,6 +1,5 @@
 // This script is made to make elastic cuts and find elastic events from real data in GMn.
 
-
 #include <iostream>
 #include <string>
 #include "../includes/read_gmnelastics_config.h"
@@ -56,7 +55,7 @@ void gmn_elastics_realdat( const char* configfilename, const char* outputfilenam
 	while ( event.getEntry(nevent++) )
 	{
 
-		double ana_percentage{(nevent/(double)nevents)*100}; //Percentage of events analyzed in the Event List.
+		double ana_percentage{(nevent/(double)nevents)*100};
 		print_analysis_percentage(ana_percentage, previousevent_ana_percentage_int);
 
 		if ( !event.passBigBiteCuts() ) continue;

@@ -5,6 +5,24 @@
 
 namespace FiducialCutConsts
 {
+	const std::vector<std::vector<double>> protonDeflection_simdat = { //{kinematicsetting(sbs #), target(0=LD2, 1=LH2), sbs fieldscale, avg proton deflection, std.dev x, std.dev y.
+		{4, 0, 0, 0, 0, 0},
+		{4, 1, 0, 0, 0, 0},
+		{4, 1, 30.0, 0, 0, 0},
+		{4, 0, 30.0, 0, 0, 0},
+		{4, 0, 50.0, 0, 0, 0},
+		{7, 0, 85.0, 0, 0, 0},
+		{8, 0, 0, 0, 0, 0},
+		{8, 1, 0, 0, 0, 0},
+		{8, 0, 50.0, 0, 0, 0},
+		{8, 0, 70.0, 0, 0, 0},
+		{8, 0, 100.0, 0, 0, 0},
+		{11, 0, 0, 0, 0, 0},
+		{11, 0, 100.0, 0, 0, 0},
+		{14, 0, 0, 0, 0, 0},
+		{14, 0, 70.0, 0, 0, 0}
+	};
+
 	//// Average proton deflections for different replay passes. ////
 	const std::vector<std::vector<double>> protonDeflection_pass0and1 = { //{kinematicsetting(sbs #), target(0=LD2, 1=LH2), sbs fieldscale, avg proton deflection, std.dev x, std.dev y.
 		{4, 0, 0, 0, 0, 0},
@@ -12,7 +30,7 @@ namespace FiducialCutConsts
 		{4, 1, 30.0, 0, 0, 0},
 		{4, 0, 30.0, -0.66863820, 0, 0},
 		{4, 0, 50.0, -1.1193552, 0, 0},
-		{7, 0, 85.0, -0.693155, 0, 0},
+		{7, 0, 85.0, -0.686894, 0.100914, 0.152036},
 		{8, 0, 0, 0, 0, 0},
 		{8, 1, 0, 0, 0, 0},
 		{8, 0, 50.0, -0.661306, 0, 0},
@@ -23,13 +41,7 @@ namespace FiducialCutConsts
 		{14, 0, 0, 0, 0, 0},
 		{14, 0, 70.0, -0.8045086, 0, 0}
 	};
-
-	//// HCal boundaries with safety margins in HCal coordinate system. ////
-	// Safety margin = Exclude 1.5 rows/columns from the edges - Andrew suggestion.
-	const double m_hcal_active_xlow_safe =  -0.75 - 10.5*HCalConst::hcalblk_h;
-	const double m_hcal_active_xhigh_safe = -0.75 + 10.5*HCalConst::hcalblk_h;
-	const double m_hcal_active_ylow_safe = -4.5*HCalConst::hcalblk_w;
-	const double m_hcal_active_yhigh_safe = 4.5*HCalConst::hcalblk_w;
+	
 }
 
 
@@ -56,6 +68,11 @@ public:
 		if ( target == "LH2" ) m_targetnum = 1;
 	}
 
+	SBSprotonDeflection( const int sbsKineNum, const TString target, const double sbsFieldScale ) : m_replaypassnum{-1}, m_sbskinenum{sbsKineNum}, m_target{target}, m_sbsfieldscale{sbsFieldScale} //Constructor to analyze simulated data.
+	{
+		if ( target == "LH2" ) m_targetnum = 1;
+	}
+
 	double return_targetnum()
 	{
 		return m_targetnum;
@@ -63,8 +80,19 @@ public:
 
 	double get_proton_deflection()
 	{
-
-		if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
+		if ( m_replaypassnum == -1 ) // For simulated data
+		{
+			for ( const auto& row : FiducialCutConsts::protonDeflection_simdat )
+			{
+				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
+				{
+					std::cout << "\nAverage proton deflection by the SBS magnet (m): " << row[3] << '\n';
+					std::cout << "### IMPORTANT: The above deflection will be used to estimate the proton deflection for the fiducial cut ###\n";	
+					return row[3];
+				}
+	     	}
+		}
+		else if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
 		{	
 			for ( const auto& row : FiducialCutConsts::protonDeflection_pass0and1 )
 			{
@@ -83,7 +111,19 @@ public:
 
 	double get_proton_deflection_stddev_x()
 	{
-		if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
+		
+		if ( m_replaypassnum == -1 )
+		{
+			for ( const auto& row : FiducialCutConsts::protonDeflection_simdat )
+			{
+				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
+				{
+					std::cout << "Standard deviation of the proton deflection distribution in x(dispersive) direction (m): " << row[4] << '\n';
+					return row[4];
+				}
+	     	}
+      	}
+		else if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
 		{
 			for ( const auto& row : FiducialCutConsts::protonDeflection_pass0and1 )
 			{
@@ -101,7 +141,18 @@ public:
 
 	double get_proton_deflection_stddev_y()
 	{
-		if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
+		if ( m_replaypassnum == -1 )
+		{
+			for ( const auto& row : FiducialCutConsts::protonDeflection_simdat )
+			{ 
+				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
+				{
+					std::cout << "Standard deviation of the proton deflection distribution in y(non-dispersive) direction (m): " << row[5] << '\n';
+					return row[5];
+				}
+	     	}
+      	}
+		else if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
 		{
 			for ( const auto& row : FiducialCutConsts::protonDeflection_pass0and1 )
 			{ 
@@ -134,21 +185,34 @@ private:
 	const double m_stddev_factor;
 
 	// HCal boundaries with "double safety margins": Excluded one HCal block and a constat factor of std.dev of the dx and dy distributions. 
-	const double m_hcal_xlow_ssafe;
-	const double m_hcal_xhigh_ssafe;
-	const double m_hcal_ylow_ssafe;
-	const double m_hcal_yhigh_ssafe;
+	double m_hcal_xlow_ssafe {0.};
+	double m_hcal_xhigh_ssafe {0.};
+	double m_hcal_ylow_ssafe {0.};
+	double m_hcal_yhigh_ssafe {0.};
 	
 	const int m_targetintnum;
 
 public:
 
 	FiducialCut( const int replayPassNum, const int sbsKineNum, const TString target, const double sbsFieldScale ) 
-	: m_protonDeflection{replayPassNum,sbsKineNum,target,sbsFieldScale}, m_avg_proton_deflection{m_protonDeflection.get_proton_deflection()}, m_stddev_x{m_protonDeflection.get_proton_deflection_stddev_x()}, m_stddev_y{m_protonDeflection.get_proton_deflection_stddev_y()}, m_stddev_factor{0.0},
-	m_hcal_xlow_ssafe{FiducialCutConsts::m_hcal_active_xlow_safe + m_stddev_factor*m_stddev_x}, m_hcal_xhigh_ssafe{FiducialCutConsts::m_hcal_active_xhigh_safe - m_stddev_factor*m_stddev_x},
-	m_hcal_ylow_ssafe{FiducialCutConsts::m_hcal_active_ylow_safe + m_stddev_factor*m_stddev_y}, m_hcal_yhigh_ssafe{FiducialCutConsts::m_hcal_active_yhigh_safe - m_stddev_factor*m_stddev_y},
-	m_targetintnum{static_cast<int>(m_protonDeflection.return_targetnum())}
+	: m_protonDeflection{replayPassNum,sbsKineNum,target,sbsFieldScale}, m_avg_proton_deflection{m_protonDeflection.get_proton_deflection()},
+	m_stddev_x{m_protonDeflection.get_proton_deflection_stddev_x()}, m_stddev_y{m_protonDeflection.get_proton_deflection_stddev_y()}, 
+	m_stddev_factor{3.0}, m_targetintnum{static_cast<int>(m_protonDeflection.return_targetnum())}
 	{
+		if ( replayPassNum == 0 || replayPassNum == 1 ) // 
+		{
+			m_hcal_xlow_ssafe = HCalConst::hcal_active_xlow_safe_pass1 + m_stddev_factor*m_stddev_x;
+			m_hcal_xhigh_ssafe = HCalConst::hcal_active_xhigh_safe_pass1 - m_stddev_factor*m_stddev_x;
+			m_hcal_ylow_ssafe = HCalConst::hcal_active_ylow_safe_pass1 + m_stddev_factor*m_stddev_y;
+			m_hcal_yhigh_ssafe = HCalConst::hcal_active_yhigh_safe_pass1 - m_stddev_factor*m_stddev_y;
+		}
+		else if ( replayPassNum == 2 || replayPassNum == -1 ) // 
+		{
+			m_hcal_xlow_ssafe = HCalConst::hcal_active_xlow_safe_pass2 + m_stddev_factor*m_stddev_x;
+			m_hcal_xhigh_ssafe = HCalConst::hcal_active_xhigh_safe_pass2 - m_stddev_factor*m_stddev_x;
+			m_hcal_ylow_ssafe = HCalConst::hcal_active_ylow_safe_pass2 + m_stddev_factor*m_stddev_y;
+			m_hcal_yhigh_ssafe = HCalConst::hcal_active_yhigh_safe_pass2 - m_stddev_factor*m_stddev_y;
+		}
 	} 
 
 	int return_targetintnum()

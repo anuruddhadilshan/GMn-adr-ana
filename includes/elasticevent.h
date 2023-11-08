@@ -30,7 +30,7 @@ private:
 	// Variables needed to copy information from "T" tree.
 	double m_bbtrn{0};
 	const static int m_MAXNTRACKS {100};
-	const static int m_MAXHCALCLUS {10};
+	const static int m_MAXHCALCLUS {10}; // #### MAY NEED TO INCREASE THIS IN PASS-2 ANALYSSIS! ###
 	double m_bbtrvz[m_MAXNTRACKS];
 	double m_bbtrth[m_MAXNTRACKS];
 	double m_bbtrx[m_MAXNTRACKS];
@@ -46,19 +46,14 @@ private:
 	double m_sbshcalx {0.};
 	double m_sbshcaly {0.};
 	double m_sbshcalatimeblk {0.};
-	//double m_sbshcalcluse[m_MAXHCALCLUS] {0.};
 	double* m_sbshcalcluse = new double[m_MAXHCALCLUS];
 	double* m_sbshcal_heclus_e = new double[m_MAXHCALCLUS];
-	//int m_ndatasbshcalcluse {0};
 	double* m_sbshcalclusatime = new double[m_MAXHCALCLUS];
 	double* m_sbshcal_heclus_atime = new double[m_MAXHCALCLUS];
-	//int m_ndatasbshcalclusatime {0};
 	double* m_sbshcalclusx = new double[m_MAXHCALCLUS];
 	double* m_sbshcal_heclus_x = new double[m_MAXHCALCLUS];
-	//int m_ndatasbshcalclusx {0};
 	double* m_sbshcalclusy = new double[m_MAXHCALCLUS];
 	double* m_sbshcal_heclus_y = new double[m_MAXHCALCLUS];
-	//int m_ndatasbshcalclusy {0}; 
 	double m_bbshe{0.};
 	double m_bbpse{0.};
 	double m_shadctime{0.};
@@ -105,7 +100,6 @@ public:
 		m_C->SetBranchStatus("sbs.hcal.e", 1);
 		m_C->SetBranchStatus("sbs.hcal.atimeblk", 1);
 		m_C->SetBranchStatus("sbs.hcal.clus.e", 1);
-		// m_C->SetBranchStatus("Ndata.sbs.hcal.clus.e", 1);
 		m_C->SetBranchStatus("sbs.hcal.clus.atime", 1);
 		// m_C->SetBranchStatus("Ndata.sbs.hcal.clus.atime", 1);
 		m_C->SetBranchStatus("sbs.hcal.clus.x", 1);
@@ -133,17 +127,9 @@ public:
 		m_C->SetBranchAddress("sbs.hcal.e", &m_sbshcale);
 		m_C->SetBranchAddress("sbs.hcal.atimeblk", &m_sbshcalatimeblk);
 		m_C->SetBranchAddress("sbs.hcal.clus.e", m_sbshcalcluse);
-		//m_C->SetBranchAddress("sbs.hcal.clus.e", m_sbshcal_heclus_e);
-		//m_C->SetBranchAddress("Ndata.sbs.hcal.clus.e", &m_ndatasbshcalcluse);
 		m_C->SetBranchAddress("sbs.hcal.clus.atime", m_sbshcalclusatime);
-		//m_C->SetBranchAddress("sbs.hcal.clus.atime", m_sbshcal_heclus_atime);
-		//m_C->SetBranchAddress("Ndata.sbs.hcal.clus.atime", &m_ndatasbshcalclusatime);
 		m_C->SetBranchAddress("sbs.hcal.clus.x", m_sbshcalclusx);
-		//m_C->SetBranchAddress("sbs.hcal.clus.x", m_sbshcal_heclus_x);
-		//m_C->SetBranchAddress("Ndata.sbs.hcal.clus.x", &m_ndatasbshcalclusx);
 		m_C->SetBranchAddress("sbs.hcal.clus.y", m_sbshcalclusy);
-		//m_C->SetBranchAddress("sbs.hcal.clus.y", m_sbshcal_heclus_y);
-		//m_C->SetBranchAddress("Ndata.sbs.hcal.clus.y", &m_ndatasbshcalclusy);
 		m_C->SetBranchAddress("bb.sh.e", &m_bbshe);
 		m_C->SetBranchAddress("bb.ps.e", &m_bbpse);
 		m_C->SetBranchAddress("bb.sh.atimeblk", &m_shadctime);
@@ -151,12 +137,13 @@ public:
 		m_Pbeam.SetPxPyPzE(0,0,m_Ebeam,m_Ebeam);
 		m_Ptarg.SetPxPyPzE(0,0,0,m_targetmass);
 
+		//m_hcalvect.make_HCal_vectors_NoVerticalOffset(m_HCaldist, m_HCalangle);
 		m_hcalvect.make_HCal_vectors_pass0and1(m_HCaldist, m_HCalangle);
 	}
 
 	int getEntry(int n) //Copies the enries of the "T" to the above defined member variables.
 	{
-		int haveData = m_C->GetEntry(n); // Return 0 if there is no data == End of the TTree.
+		int haveData = m_C->GetEntry(n); // Return 0 if there is no data, i.e. End of the TTree.
 
 		for ( int i = 0; i < m_MAXHCALCLUS; i++ )
 		{
@@ -169,15 +156,7 @@ public:
 		return haveData;
 	}
 
-	// bool pass_HCalSHADCtime_coincut()
-	// {
-	// 	m_adctimediff_hcalsh = m_sbshcalclusatime[m_indx_maxe_hcalclus] - m_shadctime;
-
-	//     if ( m_adctimediff_hcalsh < m_cut_CoinCutLow || m_adctimediff_hcalsh > m_cut_CoinCutHigh ) return false;
-
-	// 	return true;
-	// }
-
+	
 	// --- BigBite cuts --- //
 
 	bool passTrackChi2Cut() // Called by the "passBigBiteCuts() function below"
@@ -212,7 +191,7 @@ public:
 
 	void calcNeutronHypthsHCalIntersect() // Calculates the point of intersection of the hadron, under the hyphothesis that it is neutron in HCal local coordinates.
 	{
-		m_hcalvect.calc_expected_NeutronxyonHCal( m_q, m_bbtrvz );
+		m_hcalvect.calc_expected_xyonHCal( m_q, m_bbtrvz );
 		m_neutronhypthspred_x = m_hcalvect.return_xexpected();
 		m_nuetronhypthspred_y = m_hcalvect.return_yexpected();
 	}

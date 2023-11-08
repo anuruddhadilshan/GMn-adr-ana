@@ -238,11 +238,11 @@ public:
 		
 		if ( m_bbpse <= 0 || m_bbpse > 0.15 ) return false; // ***PS energy anti cut: To select pions and to reject zero energy PS events.***
 		
-		if ( m_photone > m_photonecut ) return false; // Discard events with reconstructed photon energy larger than beam energy plus some safety margin. Possibly the events from different processes?
+		// if ( m_photone > m_photonecut ) return false; // Discard events with reconstructed photon energy larger than beam energy plus some safety margin. Possibly the events from different processes?
 
-		if ( !pass_EndPointCut() ) return false; // ***End-point cut***
+		// if ( !pass_EndPointCut() ) return false; // ***End-point cut***
 
-		if ( !pass_WouldHitHCalCut() ) return false; // ***HCal active area cut***
+		// if ( !pass_WouldHitHCalCut() ) return false; // ***HCal active area cut***
  
 		return true;
 	}

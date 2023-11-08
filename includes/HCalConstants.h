@@ -14,7 +14,20 @@ namespace HCalConst
 	const double hcal_leftYpos = 0.92964; // Distance to the left side of HCal (when looking from up-stream to down-stream direction) w.r.t HCal origin.
 	const double hcal_rightYpos = -0.92964; // Distance to the right side of HCal (when looking from up-stream to down-stream direction) w.r.t HCal origin.
 	const double hcal_height_abovebeamline = -0.2897; // Vertical distance (X) of the HCal origin above beamline.
-	//const double hcal_height_abovebeamline = -0.75; // Vertical distance (X) of the HCal origin above beamline.
+
+	//// HCal boundaries with safety margins in HCal coordinate system, for *Pass0 and 1* ////
+	// Safety margin = Exclude 1.5 rows/columns from the edges - Andrew suggestion.
+	const double hcal_active_xlow_safe_pass1 =  hcal_topXpos + 1.5*hcalblk_h;
+	const double hcal_active_xhigh_safe_pass1 = hcal_botXpos - 1.5*hcalblk_h;
+	const double hcal_active_ylow_safe_pass1 = -4.5*hcalblk_w;
+	const double hcal_active_yhigh_safe_pass1 = 4.5*hcalblk_w;	
+	
+	//// HCal boundaries with safety margins in HCal coordinate system, for *Pass2 and simulation* ////
+	// Safety margin = Exclude 1.5 rows/columns from the edges - Andrew suggestion.
+	const double hcal_active_xlow_safe_pass2 =  -0.75 - 10.5*hcalblk_h;
+	const double hcal_active_xhigh_safe_pass2 = -0.75 + 10.5*hcalblk_h;
+	const double hcal_active_ylow_safe_pass2 = -4.5*hcalblk_w;
+	const double hcal_active_yhigh_safe_pass2 = 4.5*hcalblk_w;	
 }
 
 

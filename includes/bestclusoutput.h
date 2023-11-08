@@ -302,8 +302,7 @@ public:
 		m_h1_heclus_2_dx->SetLineColor(kBlue);
 		m_h1_heclus_dx->Draw();
 		m_h1_heclus_1_dx->Draw("same");
-		m_h1_heclus_2_dx->Draw("same");
-	}
+ 	}
 
 	void closeOutFile()
 	{

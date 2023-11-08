@@ -19,7 +19,7 @@
 // 	//In this analysis we will recontsruct the position vector of the hadron striking the HCal with the help of the recontructed kinematics of the scattered electron.
 // 	//This vecotr will be define in the Hall coordinate system as the 4 momentum of the scattered electron in the Tree is given in the Hall coordinate system.
 // 	//Thereofre, we need to take the dot product between the recontructed postion vector of the Hadron with the unit vectors of the HCal x axis and y axis, 
-// 	//to get the predicted x and y cluster posion respectively, on the face of the HCal in HCal coordinates.
+// 	//to get the predicted x and y cluster posi  on respectively, on the face of the HCal in HCal coordinates.
 // 	//Defining unit vectors for HCal coordinate system (Using the Hall coordinate system).
 // 	hcalXaxis.SetXYZ(0,-1,0);
 // 	hcalZaxis.SetXYZ(-sin(hcaltheta),0,cos(hcaltheta));

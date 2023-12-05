@@ -11,7 +11,8 @@ namespace FiducialCutConsts
 		{4, 1, 30.0, 0, 0, 0},
 		{4, 0, 30.0, 0, 0, 0},
 		{4, 0, 50.0, 0, 0, 0},
-		{7, 0, 85.0, -0.716, 0.0881535, 0.116972},
+		//{7, 0, 85.0, 0, 0, 0},
+		{7, 0, 85.0, -0.694537, 0.09877, 0.127543},
 		{8, 0, 0, 0, 0, 0},
 		{8, 1, 0, 0, 0, 0},
 		{8, 0, 50.0, 0, 0, 0},
@@ -30,12 +31,32 @@ namespace FiducialCutConsts
 		{4, 1, 30.0, 0, 0, 0},
 		{4, 0, 30.0, -0.66863820, 0, 0},
 		{4, 0, 50.0, -1.1193552, 0, 0},
-		{7, 0, 85.0, -0.712, 0.101678, 0.166800},
+		{7, 0, 85.0, -0.690, 0.101592, 0.168226},
 		{8, 0, 0, 0, 0, 0},
 		{8, 1, 0, 0, 0, 0},
 		{8, 0, 50.0, -0.661306, 0, 0},
 		{8, 0, 70.0, -0.920279, 0, 0},
 		{8, 0, 100.0, -1.29957, 0, 0},
+		{9, 0, 70.0, -0.811794, 0.180786, 0.198251},
+		{11, 0, 0, 0, 0, 0},
+		{11, 0, 100.0, -0.7144345, 0, 0},
+		{14, 0, 0, 0, 0, 0},
+		{14, 0, 70.0, -0.8045086, 0, 0}
+	};
+
+	const std::vector<std::vector<double>> protonDeflection_pass2 = { //{kinematicsetting(sbs #), target(0=LD2, 1=LH2), sbs fieldscale, avg proton deflection, std.dev x, std.dev y.
+		{4, 0, 0, 0, 0, 0},
+		{4, 1, 0, 0, 0, 0},
+		{4, 1, 30.0, 0, 0, 0},
+		{4, 0, 30.0, -0.758239, 0.199934, 0.0},
+		{4, 0, 50.0, -1.2097, 0.214125, 0.0},
+		{7, 0, 85.0, -0.798306, 0.144905, 0.0},
+		{8, 0, 0, 0, 0, 0},
+		{8, 1, 0, 0, 0, 0},
+		{8, 0, 50.0, -0.661306, 0, 0},
+		{8, 0, 70.0, -0.920279, 0, 0},
+		{8, 0, 100.0, -1.29957, 0, 0},
+		{9, 0, 70.0, -0.811794, 0.180786, 0.198251},
 		{11, 0, 0, 0, 0, 0},
 		{11, 0, 100.0, -0.7144345, 0, 0},
 		{14, 0, 0, 0, 0, 0},
@@ -104,6 +125,18 @@ public:
 				}
 	     	}
     	 }
+    	else if ( m_replaypassnum == 2 )
+		{	
+			for ( const auto& row : FiducialCutConsts::protonDeflection_pass2 )
+			{
+				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
+				{
+					std::cout << "\nAverage proton deflection by the SBS magnet (m): " << row[3] << '\n';
+					std::cout << "### IMPORTANT: The above deflection will be used to estimate the proton deflection for the fiducial cut ###\n";	
+					return row[3];
+				}
+	     	}
+    	 }
 
      	std::cout << "\n### ERROR: Either the mass replay pass number, kinematic setting number, or the percentage SBS magnet field scale entered are invalid ###\n";
 		return 0;
@@ -134,6 +167,17 @@ public:
 				}
 	     	}
       	}
+      	else if ( m_replaypassnum == 2 )
+		{
+			for ( const auto& row : FiducialCutConsts::protonDeflection_pass2 )
+			{
+				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
+				{
+					std::cout << "Standard deviation of the proton deflection distribution in x(dispersive) direction (m): " << row[4] << '\n';
+					return row[4];
+				}
+	     	}
+      	}
 
      	std::cout << "\n### ERROR: Either the mass replay pass number, kinematic setting number, or the percentage SBS magnet field scale entered are invalid ###\n";
 		return 0;
@@ -155,6 +199,17 @@ public:
 		else if ( m_replaypassnum == 0 || m_replaypassnum == 1 )
 		{
 			for ( const auto& row : FiducialCutConsts::protonDeflection_pass0and1 )
+			{ 
+				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
+				{
+					std::cout << "Standard deviation of the proton deflection distribution in y(non-dispersive) direction (m): " << row[5] << '\n';
+					return row[5];
+				}
+	     	}
+      	}
+      	else if ( m_replaypassnum == 2 )
+		{
+			for ( const auto& row : FiducialCutConsts::protonDeflection_pass2 )
 			{ 
 				if ( row[0] == m_sbskinenum && row[1] == m_targetnum && row[2] == m_sbsfieldscale )
 				{

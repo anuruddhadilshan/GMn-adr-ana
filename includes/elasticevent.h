@@ -137,8 +137,8 @@ public:
 		m_Pbeam.SetPxPyPzE(0,0,m_Ebeam,m_Ebeam);
 		m_Ptarg.SetPxPyPzE(0,0,0,m_targetmass);
 
-		//m_hcalvect.make_HCal_vectors_NoVerticalOffset(m_HCaldist, m_HCalangle);
-		m_hcalvect.make_HCal_vectors_pass0and1(m_HCaldist, m_HCalangle);
+		if ( m_ReplayPassNum == 2 ) m_hcalvect.make_HCal_vectors_NoVerticalOffset(m_HCaldist, m_HCalangle);
+		else if ( m_ReplayPassNum == 0 || m_ReplayPassNum == 1 ) m_hcalvect.make_HCal_vectors_pass0and1(m_HCaldist, m_HCalangle);
 	}
 
 	int getEntry(int n) //Copies the enries of the "T" to the above defined member variables.

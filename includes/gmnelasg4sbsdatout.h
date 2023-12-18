@@ -1,23 +1,28 @@
-#include "elasticevent.h"
-#include "besthcalclus.h"
+#include "elasticeventg4sbs.h"
+#include "besthcalclusforg4sbs.h"
 
-#ifndef GMNELASREALDATOUT_H
-#define GMNELASREALDATOUT_H
+#ifndef GMNELASG4SBSDATOUT_H
+#define GMNELASG4SBSDATOUT_H
 
-class Output
+class OutputG4SBS
 {
 private:
 
-	ElasticEvent& m_event;
-	BestHCalClus& m_bestHCalClus;
+	ElasticEventG4SBS& m_event;
+	BestHCalClusForG4SBS& m_bestHCalClus;
 	const TString m_outputdirpath;
 	const char* m_outputfilename;
+	const bool m_is_simc;
 	TFile* m_fout;
 	TTree* m_resultstree;
+	TTree* m_simcinfotree;
 
 	// Define the member variables to hold data for output TTree variables.
 	double m_Q2 {0.};
 	double m_W2 {0.};
+	double m_mc_weight {0.}; // Event weight for the G4SBS generator.
+	double m_simc_weight {0.}; // Cross section & spectral function weight (ub/MeV/sr^2) for SIMC generator.
+	double m_simc_finalweight {0.}; // Final event weight for the SIMC generator.
 	double m_predhcal_xpos {0.};
 	double m_predhcal_ypos {0.};
 	double m_bbtrvz {0.};
@@ -37,7 +42,7 @@ private:
 	double m_bbphitgt{0.};
 	double m_bbpoltgt{0.};
 	
-	const static int m_MAXHCALCLUS {10};
+	const static int m_MAXHCALCLUS {20};
 	double* m_sbshcalcluse; // Ptr to "sbs.hcal.clus.e" array.
 	double* m_sbshcalclusatime; // Ptr to "sbs.hcal.clus.atime" array.
 	double* m_sbshcalclusx; // Ptr to "sbs.hcal.clus.x" array.
@@ -64,10 +69,11 @@ private:
 	TH1D* m_h1_predhcal_ypos;
 	TH2D* m_h2_predhcal_xy;
 	TH1D* m_h1_heclus_dx;
+	TH1D* m_h1_heclus_dy;
 	TH2D* m_h2_heclus_dxdy;
 	TH1D* m_h1_bestclus_dx;
-	TH2D* m_h2_bestclus_dxdy;
-	
+	TH1D* m_h1_bestclus_dy;
+	TH2D* m_h2_bestclus_dxdy;	
 
 	// Diagnostics output histograms.
 	TH1D* m_h1_bb_tr_vz;
@@ -78,17 +84,27 @@ private:
 	TH1D* m_h1_hcalbestclus_e;
 	TH1D* m_h1_hcalbestclus_sh_atimediff;
 
+	// Variables for the SIMC simulation run info.
+	double m_simc_ntried {0.};
+	double m_simc_genvol {0.};
+	double m_simc_luminosity {0.};
+	double m_simc_charge {0.};
+
 public:
 
-	Output(ElasticEvent& event, BestHCalClus& bestHCalClus, TString path_outputdir, const char* outputfilename) : m_event{event}, m_bestHCalClus{bestHCalClus}, m_outputdirpath{path_outputdir}, m_outputfilename{outputfilename},
+	OutputG4SBS(ElasticEventG4SBS& event, BestHCalClusForG4SBS& bestHCalClus, TString path_outputdir, const char* outputfilename, const bool is_simc = false)
+	: m_event{event}, m_bestHCalClus{bestHCalClus}, m_outputdirpath{path_outputdir}, m_outputfilename{outputfilename}, m_is_simc{is_simc},
 	m_sbshcalcluse{m_event.return_HCalClusEArryPtr()}, m_sbshcalclusatime{m_event.return_HCalClusAtimeArryPtr()}, m_sbshcalclusx{m_event.return_HCalClusXArryPtr()}, m_sbshcalclusy{m_event.return_HCalClusYArryPtr()},
 	m_sbshcal_heclus_e{m_event.return_HCalHEClusEArryPtr()}, m_sbshcal_heclus_atime{m_event.return_HCalHEClusAtimeArryPtr()}, m_sbshcal_heclus_x{m_event.return_HCalHEClusXArryPtr()}, m_sbshcal_heclus_y{m_event.return_HCalHEClusYArryPtr()}
 	{
 		m_fout = new TFile(Form("%s/%s.root", m_outputdirpath.Data(), m_outputfilename),"RECREATE");
-		m_resultstree = new TTree("T","Best HCal cluster analysis");
+		m_resultstree = new TTree("T","Event Tree");
 
 		m_resultstree->Branch("e.kine.Q2", &m_Q2);
 		m_resultstree->Branch("e.kine.W2", &m_W2);
+		if (!is_simc) m_resultstree->Branch("MC.mc_weight", &m_mc_weight);
+		if (is_simc) m_resultstree->Branch("MC.simc_weight", &m_simc_weight);
+		if (is_simc) m_resultstree->Branch("MC.simc_finalweight", &m_simc_finalweight);
 		m_resultstree->Branch("bb.tr.vz", &m_bbtrvz);
 		// m_resultstree->Branch("bb.tr.th", &m_bbtrth);
 		// m_resultstree->Branch("bb.tr.x", &m_bbtrx);
@@ -124,16 +140,18 @@ public:
 		m_resultstree->Branch("sbs.hcal.bestclus.y", &m_sbshcal_bestclus_y);
 		m_resultstree->Branch("sbs.hcal.bestclus.dx", &m_sbshcal_bestclus_dx);
 		m_resultstree->Branch("sbs.hcal.bestclus.dy", &m_sbshcal_bestclus_dy);
-		
+
 		// Analysis results output histograms.
 		m_h1_Q2 = new TH1D("h1_Q2", "Q^{2}/(GeV^{2}/c^{2})", 300,0, 15);
 		m_h1_W2 = new TH1D("h1_W2", "W^{2}/(GeV^{2}/c^{2})", 200, 0, 5);
 		m_h1_predhcal_xpos = new TH1D("h1_predhcal_xpos", "Neutron hypothesis reconstructed x hit position on HCal; X_{pos} (m)", 1000, -4, 6);
 		m_h1_predhcal_ypos = new TH1D("h1_predhcal_ypos", "Neutron hypothesis reconstructed y hit position on HCal; Y_{pos} (m)", 500, -3, 2);
 		m_h2_predhcal_xy = new TH2D("h2_predhcal_xy", "Neutron hypothesis reconstructed x vs y hit position on HCal; Y_{pos} (m); X_{pos} (m)", 500, -3, 2, 1000, -4, 6);
-		m_h1_heclus_dx = new TH1D("h1_heclus_dx", "dx - From highest energy HCal cluster; dx (m)", 800, -4, 4);
+		m_h1_heclus_dx = new TH1D("h1_heclus_dx", "dx - From highest energy HCal cluster; dx (m)", 400, -4, 4);
+		m_h1_heclus_dy = new TH1D("h1_heclus_dy", "dy - From highest energy HCal cluster; dy (m)", 200, -2, 2);
 		m_h2_heclus_dxdy = new TH2D("h2_heclus_dxdy", "dx vs dy - From highest energy HCal cluster; dy = Y_{hcal}-Y_{predicted} (m); dx = X_{hcal}-X_{predicted} (m)", 400, -2, 2, 800, -4, 4);
-		m_h1_bestclus_dx = new TH1D("h1_bestclus_dx", "dx - From timing+HEclus algorithm; dx (m)", 800, -4, 4);
+		m_h1_bestclus_dx = new TH1D("h1_bestclus_dx", "dx - From timing+HEclus algorithm; dx (m)", 400, -4, 4);
+		m_h1_bestclus_dy = new TH1D("h1_bestclus_dy", "dy - From timing+HEclus algorithm; dy (m)", 200, -2, 2);
 		m_h2_bestclus_dxdy = new TH2D("h2_bestclus_dxdy", "dx vs dy - From timing+HEclus algorithm; dy = Y_{hcal}-Y_{predicted} (m); dx = X_{hcal}-X_{predicted} (m)", 400, -2, 2, 800, -4, 4);
 
 		// Diagnostic variables output histograms.
@@ -145,12 +163,22 @@ public:
 		m_h1_hcalbestclus_e = new TH1D("h_hcalbestclus_e", "HCal time+HEclus energy; Cluster Energy (GeV)", 200, 0, 2.0);
 		m_h1_hcalbestclus_sh_atimediff = new TH1D("h1_hcalbestclus_sh_atimediff","HCal time+HEclus time - SH time; HCal_{ADCtime}-BBSH_{ADCtime} (ns); Entries",3000,-100,200);   
 
+		// Initiate the TTree to store simulation run specific info.
+		if (is_simc) m_simcinfotree = new TTree("S", "SIMC Simulation Info Tree");
+		
+		if (is_simc) m_simcinfotree->Branch("MC.simc.ntried", &m_simc_ntried);
+		if (is_simc) m_simcinfotree->Branch("MC.simc.genvol", &m_simc_genvol);
+		if (is_simc) m_simcinfotree->Branch("MC.simc.luminosity", &m_simc_luminosity);
+		if (is_simc) m_simcinfotree->Branch("MC.simc.charge", &m_simc_charge);
 	}
 
 	void copyFromEvent()
 	{
 		m_Q2 = m_event.return_Q2();
 		m_W2 = m_event.return_W2();
+		if (!m_is_simc) m_mc_weight = m_event.return_mcWeight();
+		if (m_is_simc) m_simc_weight = m_event.return_MCSimcWeight();
+		if (m_is_simc) m_simc_finalweight = m_event.return_SimcFinalWeight();
 		m_predhcal_xpos = m_event.return_nHypthsPredx();
 		m_predhcal_ypos = m_event.return_nHypthsPredy();
 		m_bbtrvz = m_event.return_BBTrVz();
@@ -181,7 +209,7 @@ public:
 		// m_bbpoltgt = m_event.return_BBpoltgt();		
 		// m_clusepoint = m_event.return_HCalClusE();	
 
-	}
+	}	
 
 	void fillOutTree()
 	{
@@ -196,11 +224,26 @@ public:
 		m_h1_predhcal_xpos->Fill(m_predhcal_xpos);
 		m_h1_predhcal_ypos->Fill(m_predhcal_ypos);
 		m_h2_predhcal_xy->Fill(m_predhcal_ypos, m_predhcal_xpos);
-		m_h1_heclus_dx->Fill(m_sbshcal_heclus_dx);
-		m_h2_heclus_dxdy->Fill(m_sbshcal_heclus_dy, m_sbshcal_heclus_dx);
-		m_h1_bestclus_dx->Fill(m_sbshcal_bestclus_dx);
-		m_h2_bestclus_dxdy->Fill(m_sbshcal_bestclus_dy, m_sbshcal_bestclus_dx); 
-		
+
+		if (m_is_simc) 
+		{
+			m_h1_heclus_dx->Fill(m_sbshcal_heclus_dx, m_simc_finalweight);
+			m_h1_heclus_dy->Fill(m_sbshcal_heclus_dy, m_simc_finalweight);
+			m_h2_heclus_dxdy->Fill(m_sbshcal_heclus_dy, m_sbshcal_heclus_dx, m_simc_finalweight);
+			m_h1_bestclus_dx->Fill(m_sbshcal_bestclus_dx, m_simc_finalweight);
+			m_h1_bestclus_dy->Fill(m_sbshcal_bestclus_dy, m_simc_finalweight);
+			m_h2_bestclus_dxdy->Fill(m_sbshcal_bestclus_dy, m_sbshcal_bestclus_dx, m_simc_finalweight); 
+		}
+		else
+		{
+			m_h1_heclus_dx->Fill(m_sbshcal_heclus_dx, m_mc_weight);
+			m_h1_heclus_dy->Fill(m_sbshcal_heclus_dy, m_mc_weight);
+			m_h2_heclus_dxdy->Fill(m_sbshcal_heclus_dy, m_sbshcal_heclus_dx, m_mc_weight);
+			m_h1_bestclus_dx->Fill(m_sbshcal_bestclus_dx, m_mc_weight);
+			m_h1_bestclus_dy->Fill(m_sbshcal_bestclus_dy, m_mc_weight);
+			m_h2_bestclus_dxdy->Fill(m_sbshcal_bestclus_dy, m_sbshcal_bestclus_dx, m_mc_weight);
+		}
+		 		
 		// Diagnostic histos.
 		m_h1_bb_tr_vz->Fill(m_bbtrvz);
 		m_h1_bb_tr_p->Fill(m_bbtrp);
@@ -211,39 +254,6 @@ public:
 		m_h1_hcalbestclus_sh_atimediff->Fill(m_sbshcal_bestclus_atime - m_shadctime);
 	}
 
-
-	// void makePlots()
-	// {
-	// 	TCanvas* C1 = new TCanvas();
-	// 	m_h2_bestclus_dxdy->Draw("colz");
-
-	// 	TCanvas* C2 = new TCanvas();
-	// 	m_h1_heblkclus_dx->SetLineColor(kBlue);
-	// 	m_h1_heclus_dx->SetLineColor(kGreen);
-	// 	m_h1_bestclus_dx->SetLineColor(kRed);
-	// 	m_h1_bestclus_dx->Draw();
-	// 	m_h1_heclus_dx->Draw("same");
-	// 	m_h1_heblkclus_dx->Draw("same");
-
-	// 	TCanvas* C3 = new TCanvas();
-	// 	m_h1_bestclus_dx->Draw();
-	// 	m_h1_bestclus_1_dx->SetLineColor(kGreen);
-	// 	m_h1_bestclus_1_dx->Draw("same");
-	// 	m_h1_bestclus_2_dx->SetLineColor(kBlue);
-	// 	m_h1_bestclus_2_dx->Draw("same");
-	// 	m_h1_bestclus_3_dx->SetLineColor(kMagenta);
-	// 	m_h1_bestclus_3_dx->Draw("same");
-	// 	m_h1_bestclus_4_dx->SetLineColor(kOrange);
-	// 	m_h1_bestclus_4_dx->Draw("same");
-
-	// 	TCanvas* C4 = new TCanvas();
-	// 	m_h1_heclus_dx->SetLineColor(kRed);
-	// 	m_h1_heclus_1_dx->SetLineColor(kGreen);
-	// 	m_h1_heclus_2_dx->SetLineColor(kBlue);
-	// 	m_h1_heclus_dx->Draw();
-	// 	m_h1_heclus_1_dx->Draw("same");
- // 	}
-
 	void closeOutFile()
 	{
 		m_resultstree->Write(0, TObject::kWriteDelete, 0);
@@ -253,8 +263,10 @@ public:
 		m_h1_predhcal_ypos->Write();
 		m_h2_predhcal_xy->Write();
 		m_h1_heclus_dx->Write();
+		m_h1_heclus_dy->Write();
 		m_h2_heclus_dxdy->Write();
 		m_h1_bestclus_dx->Write();
+		m_h1_bestclus_dy->Write();
 		m_h2_bestclus_dxdy->Write();		
 		
 		m_h1_bb_tr_vz->Write();
@@ -265,6 +277,8 @@ public:
 		m_h1_hcalbestclus_e->Write();
 		m_h1_hcalbestclus_sh_atimediff->Write(); 
 
+		if (m_is_simc) m_simcinfotree->Write();
+
 		delete[] m_sbshcalcluse;
 		delete[] m_sbshcalclusatime;
 		delete[] m_sbshcalclusx;
@@ -273,109 +287,24 @@ public:
 		delete[] m_sbshcal_heclus_atime;
 		delete[] m_sbshcal_heclus_x;
 		delete[] m_sbshcal_heclus_y;
+
+		m_fout->Close();
+		delete m_fout;
 	}
 
+	void copySIMCrunInfo() // *SIMC only function* Copy common run information about the SIMC event generation.
+	{
+		m_simc_ntried = m_event.return_SimcNtried();
+		m_simc_genvol = m_event.return_SimcGenvol();
+		m_simc_luminosity = m_event.return_SimcLuminosity();
+		m_simc_charge = m_event.return_SimcCharge();		
+	}
 
-
-// private:
-
-// 	// Define TCanvases to print output analysis histograms and make a PDF file.
-// 	static const int m_nanacanvas{10};
-// 	TCanvas* m_anaCan[m_nanacanvas];
-
-// 	// Define TCanvases to print cut parameter output histograms.
-// 	static const int m_ncutcanvas{6};
-// 	TCanvas* m_cutCan[m_ncutcanvas];
-
-// public:
-
-// 	void make_anapdf()
-// 	{
-		
-// 		m_anaCan[0] = new TCanvas("Track dx/dz distribution");;
-// 		m_h1_bb_tr_th->Draw();
-
-// 		m_anaCan[1] = new TCanvas("dx/dz vs track x pos distribution");
-// 		m_h2_bb_tr_th_vs_x->Draw("COLZ");
-
-// 		m_anaCan[2] = new TCanvas("Azimuthal scattering (#phi) angle distribution");
-// 		m_h1_phi_tgt->Draw();
-
-// 		m_anaCan[3] = new TCanvas("Pola scattering (#theta) angle distribution");
-// 		m_h1_pol_tgt->Draw();
-
-// 		m_anaCan[4] = new TCanvas("HCal cluster vertical pos vs #phi distribution");
-// 		m_h2_hcalclusX_vs_phi->Draw("COLZ");
-
-// 		m_anaCan[5] = new TCanvas("Reconstructed photon energy distribution");
-// 		m_h1_photon_e->Draw();
-
-// 		m_anaCan[6] = new TCanvas("Reconstructed neutron X position on HCal");
-// 		m_h1_sbs_neutron_hcal_xpos->Draw();
-
-// 		m_anaCan[7] = new TCanvas("Reconstructed neutron Y position on HCal");
-// 		m_h1_sbs_neutron_hcal_ypos->Draw();
-
-// 		m_anaCan[8] = new TCanvas("Reconstructed neutron Y vs X position on HCal");
-// 		m_h2_sbs_neutron_hcal_xy->Draw("COLZ");
-
-// 		m_anaCan[9] = new TCanvas("HCal dx vs dy");
-// 		m_h2_sbs_neutron_hcal_dxdy->Draw("COLZ");
-
-// 		TString pdffilename = Form("%s_anahistos.pdf", m_outputfilename);
-// 		TString openfilename = pdffilename+"(";
-// 		TString closefilename = pdffilename+")";
-
-// 		double lmargin=0.15;
-// 	  	double rmargin=0.15;
-// 	    double bmargin=0.15;
-// 	    double tmargin=0.09;
-
-// 	    for (int icanvas = 0; icanvas < m_nanacanvas; icanvas++)
-// 		{
-// 			if(icanvas == 0) m_anaCan[icanvas]->Print(openfilename);
-// 			else	if (icanvas == m_nanacanvas-1) m_anaCan[icanvas]->Print(closefilename);
-// 			else m_anaCan[icanvas]->Print(pdffilename);
-// 		}
-// 	}
-
-	// void make_cutpdf()
-	// {
-		
-	// 	m_cutCan[0] = new TCanvas("BB track vertex distribution");;
-	// 	m_h1_bb_tr_vz->Draw();
-
-	// 	m_cutCan[1] = new TCanvas("HCal and BBCal ADC time difference");
-	// 	m_h1_adctimediff_hcalsh->Draw();
-
-	// 	m_cutCan[2] = new TCanvas("HCal cluster energy distribution");
-	// 	m_h1_hcal_e->Draw();
-
-	// 	m_cutCan[3] = new TCanvas("BB track momentum distribution");
-	// 	m_h1_bb_tr_p->Draw();
-
-	// 	m_cutCan[4] = new TCanvas("SH cluster energy + PS cluster energy distribution");
-	// 	m_h1_bb_shps_e->Draw();
-
-	// 	m_cutCan[5] = new TCanvas("BigBite E/P distribution");
-	// 	m_h1_bb_eoverp->Draw();
-
-	// 	TString pdffilename = Form("%s_cuthistos.pdf", m_outputfilename);
-	// 	TString openfilename = pdffilename+"(";
-	// 	TString closefilename = pdffilename+")";
-
-	// 	double lmargin=0.15;
-	//   	double rmargin=0.15;
-	//     double bmargin=0.15;
-	//     double tmargin=0.09;
-
-	//     for (int icanvas = 0; icanvas < m_ncutcanvas; icanvas++)
-	// 	{
-	// 		if(icanvas == 0) m_cutCan[icanvas]->Print(openfilename);
-	// 		else	if (icanvas == m_ncutcanvas-1) m_cutCan[icanvas]->Print(closefilename);
-	// 		else m_cutCan[icanvas]->Print(pdffilename);
-	// 	}
-	// }
+	void fillSIMCrunInfoTree() // *SIMC only function*
+	{
+		m_simcinfotree->Fill();
+	}
+	
 };
 
 #endif

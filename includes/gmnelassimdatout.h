@@ -87,8 +87,8 @@ public:
 		m_fout = new TFile(Form("%s/%s.root", m_outputdirpath.Data(), m_outputfilename),"RECREATE");
 		m_resultstree = new TTree("T","Best HCal cluster analysis");
 
-		m_resultstree->Branch("e.kine.Q2", &m_Q2);
-		m_resultstree->Branch("e.kine.W2", &m_W2);
+		m_resultstree->Branch("ekine.Q2", &m_Q2);
+		m_resultstree->Branch("ekine.W2", &m_W2);
 		m_resultstree->Branch("bb.tr.vz", &m_bbtrvz);
 		// m_resultstree->Branch("bb.tr.th", &m_bbtrth);
 		// m_resultstree->Branch("bb.tr.x", &m_bbtrx);

@@ -2,6 +2,7 @@
 #include <string>
 #include "../includes/read_gmndxdy_config.h"
 #include "../includes/elasticevent.h"
+#include "../includes/besthcalclus.h"
 #include "../includes/bestclusoutput.h"
 
 
@@ -62,7 +63,6 @@ void hcal_clus_study( const char* configfilename, const char* outputfilename = "
 
 		if ( !event.passFiducialCut() ) continue;
 
-		bestHCalClus.makeHighestEClusArrys();
 		bestHCalClus.findBestHCalClus();
 
 		output.copyFromEvent();

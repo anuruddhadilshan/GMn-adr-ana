@@ -334,7 +334,7 @@ public:
 		pProton.SetPxPyPzE( 0, 0, 0, Constants::p_mass ); // Target proton is at rest and has only its rest mass energy.
 		pPiplus.SetPxPyPzE( piplus_px, piplus_py, piplus_pz, piplus_e ); // 3 - Componets of the momentum as measured from BigBite. Energy calculated from the energy-momentum relationship.
 
-		pNeutron = pPhoton + pProton - pPiplus; // Conversation from energy-momentum four-vector.
+		pNeutron = pPhoton + pProton - pPiplus; // Conservation from energy-momentum four-vector.
 
 		m_sbsneutronpx = pNeutron.Px();
 		m_sbsneutronpy = pNeutron.Py();

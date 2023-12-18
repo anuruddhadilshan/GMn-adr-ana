@@ -194,9 +194,9 @@ void fit_dx_getR( const char* rootfile, const double low_w2 = -0.593086, const d
 	nfit_2->Draw("SAME");
 
 	// 3.0) Now perform a first order pol4 fit for the background.
-	TF1* backgfit_1 = new TF1("backgfit_1", "pol4"); //, h1_dx_withelastcut->GetXaxis()->GetBinCenter(min_bin), h1_dx_withelastcut->GetXaxis()->GetBinCenter(max_bin));
-	backgfit_1->SetRange(h1_dx_withelastcut->GetXaxis()->GetBinCenter(min_bin), pfit_1_par[1] - 2.5*pfit_1_par[2]);
-	backgfit_1->SetRange(nfit_1_par[1] + 2.5*nfit_1_par[2], h1_dx_withelastcut->GetXaxis()->GetBinCenter(max_bin), "R+");
+	TF1* backgfit_1 = new TF1("backgfit_1", "pol4",h1_dx_withelastcut->GetXaxis()->GetBinCenter(min_bin),h1_dx_withelastcut->GetXaxis()->GetBinCenter(max_bin)); //, h1_dx_withelastcut->GetXaxis()->GetBinCenter(min_bin), h1_dx_withelastcut->GetXaxis()->GetBinCenter(max_bin));
+	//backgfit_1->SetRange(h1_dx_withelastcut->GetXaxis()->GetBinCenter(min_bin), pfit_1_par[1] - 2.5*pfit_1_par[2]);
+	//backgfit_1->SetRange(nfit_1_par[1] + 2.5*nfit_1_par[2], h1_dx_withelastcut->GetXaxis()->GetBinCenter(max_bin), "R+");
 	h1_dx_withelastcut->Fit(backgfit_1, "RQN");
 	backgfit_1->Draw("SAME");
 	C3->Update();

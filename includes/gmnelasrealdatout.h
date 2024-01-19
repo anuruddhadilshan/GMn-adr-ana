@@ -18,6 +18,8 @@ private:
 	// Define the member variables to hold data for output TTree variables.
 	double m_Q2 {0.};
 	double m_W2 {0.};
+	double m_thetapq_deg {0.};
+	double m_p_perp {0.};
 	double m_predhcal_xpos {0.};
 	double m_predhcal_ypos {0.};
 	double m_bbtrvz {0.};
@@ -124,6 +126,8 @@ public:
 		m_resultstree->Branch("sbs.hcal.bestclus.y", &m_sbshcal_bestclus_y);
 		m_resultstree->Branch("sbs.hcal.bestclus.dx", &m_sbshcal_bestclus_dx);
 		m_resultstree->Branch("sbs.hcal.bestclus.dy", &m_sbshcal_bestclus_dy);
+		m_resultstree->Branch("theta_pq", &m_thetapq_deg);
+		m_resultstree->Branch("pseudo_pperp", &m_p_perp); //q_vector*theta_pq.
 		
 		// Analysis results output histograms.
 		m_h1_Q2 = new TH1D("h1_Q2", "Q^{2}/(GeV^{2}/c^{2})", 300,0, 15);
@@ -180,7 +184,8 @@ public:
 		// m_bbphitgt = m_event.return_BBphitgt();
 		// m_bbpoltgt = m_event.return_BBpoltgt();		
 		// m_clusepoint = m_event.return_HCalClusE();	
-
+		m_thetapq_deg = m_event.return_thetapq_deg();
+		m_p_perp = m_event.return_pperp();
 	}
 
 	void fillOutTree()

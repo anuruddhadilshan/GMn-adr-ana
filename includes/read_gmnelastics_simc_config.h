@@ -51,9 +51,16 @@ public:
 	    {
 	    	if( !currentline.BeginsWith("#") )
 	    	{
-	      		//m_C->Add(currentline);
-	      		m_ROOTFileVector.push_back(currentline);
-      			std::cout << "Loaded root file: " << currentline << '\n';
+	      		TFile* file = TFile::Open(currentline.Data());
+	      		if (file)
+	      		{
+	      			m_ROOTFileVector.push_back(currentline);
+      				std::cout << "Loaded root file: " << currentline << '\n';
+      			}
+      			else
+      			{
+      				std::cout << "ROOT file does not exist: " << currentline << '\n';
+      			}
 	    	}    
 	  	}
 

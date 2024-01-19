@@ -67,6 +67,10 @@ void gmn_elastics_realdat( const char* configfilename, const char* outputfilenam
 		if ( !event.passFiducialCut() ) continue;
 
 		bestHCalClus.findBestHCalClus();
+		event.getBestHCalClusIndx( bestHCalClus.return_BestHCalClusIndx() );
+
+		event.calcThetapq();
+		event.calcPperp();
 
 		output.copyFromEvent();
 		output.fillOutTree();

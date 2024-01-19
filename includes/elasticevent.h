@@ -232,9 +232,17 @@ private:
 	double m_bbpoltgt{0.}; // Polar angle of pi+ detected by the BigBite spectrometer.
 	double m_Q2 {0.}; // Four-momentum trasfer squared.
 	double m_W2 {0.}; // Invariant mass squared.
-		
+	int m_sbshcal_bestclus_indx {0}; // Best cluster ID.
+	ROOT::Math::XYZVector m_q3vector; // 3 dimentional spatial vecotr of q.
+	ROOT::Math::XYZVector m_p3vector; // Vector from the Hall origin.
+
 	double m_sbsneutronhcaldx{0.}; // X coordinate difference between the measured and prediceted neutron position values. 
 	double m_sbsneutronhcaldy{0.}; // Y coordinate difference between the measured and prediceted neutron position values.	
+
+	double m_thetapq_rad {0.};
+	double m_thetapq_deg {0.};
+
+	double m_p_perp {0.}; // Missing momentum perpendicular component approximation.
 	
 public: 
  
@@ -253,57 +261,39 @@ public:
 		m_Q2 = -m_q.M2();
 		m_W2 = (m_Ptarg+m_q).M2(); // Calculates the invariant mass squared (W^2) of the virtual photon - nucleon system.		
 	}
+
+	void getBestHCalClusIndx( int bestclus_indx )
+	{
+		m_sbshcal_bestclus_indx = bestclus_indx;
+	}
+
+	void make_p3Vector()
+	{
+		ROOT::Math::XYZVector hcal_origintocluspos( m_sbshcalclusy[m_sbshcal_bestclus_indx], -m_sbshcalclusx[m_sbshcal_bestclus_indx], 0 );
+		m_p3vector = m_hcalvect.return_VertextoHCalOrigin() + hcal_origintocluspos;
+	}
+
+	void make_q3Vector()
+	{
+		m_q3vector = m_q.Vect();
+	}
 	
-		
-	// void calc_NeutronHCaldxdy()
-	// {
-	// 	// m_sbsneutronhcaldx = m_sbshcalx - m_sbsneutronhcalx;
-	// 	// m_sbsneutronhcaldy = m_sbshcaly - m_sbsneutronhcaly;
-	// 	m_sbsneutronhcaldx = m_sbshcalclusx[m_indx_maxe_hcalclus] - m_sbsneutronhcalx;
-	// 	m_sbsneutronhcaldy = m_sbshcalclusy[m_indx_maxe_hcalclus] - m_sbsneutronhcaly;
-	// }
+	void calcThetapq()
+	{
+		make_p3Vector();
+		make_q3Vector();
 
-	// double return_HCalNeutrondx()
-	// {
-	// 	return m_sbsneutronhcaldx;
-	// }
+		double cos_thetapq = (m_p3vector.Dot(m_q3vector)) / (m_p3vector.r()*m_q3vector.r());
 
-	// double return_HCalNeutrondy()
-	// {
-	// 	return m_sbsneutronhcaldy;
-	// }
+		m_thetapq_rad = acos(cos_thetapq);
+		m_thetapq_deg = m_thetapq_rad*TMath::RadToDeg();
+	}
 
+	void calcPperp()
+	{
+		m_p_perp = m_q3vector.r() * m_thetapq_rad;
+	}
 
-
-// public:	
-	
-// 	bool return_DidPassHCalBBSH_ADCtime_Corr()
-// 	{
-// 		return m_pass_hcalshcoincut;
-// 	}   
-
-// Best HCal cluster selection implementation.
-
-// private:
-
-// 	double m_maxe_hcalclus_e {0.};
-// 	int m_indx_maxe_hcalclus {0};
-
-// public:
-
-// 	void find_maxe_hcalclus_indx()
-// 	{
-// 		m_maxe_hcalclus_e = 0.;
-
-// 		for ( int indx = 0; indx < m_ndatasbshcalcluse; indx++ )
-// 		{
-// 			if ( m_sbshcalcluse[indx] > m_maxe_hcalclus_e ) 
-// 			{
-// 				m_maxe_hcalclus_e = m_sbshcalcluse[indx];
-// 				m_indx_maxe_hcalclus = indx;
-// 			}
-// 		}
-// 	} 
 
 	// --- Return variables to the output TTree --- //
 
@@ -394,6 +384,21 @@ public:
 	double return_W2()
 	{
 		return m_W2;
+	}
+
+	double return_thetapq_rad()
+	{
+		return m_thetapq_rad;
+	}
+
+	double return_thetapq_deg()
+	{
+		return m_thetapq_deg;
+	}
+
+	double return_pperp()
+	{
+		return m_p_perp;
 	}
 
 	double return_nHypthsPredx()

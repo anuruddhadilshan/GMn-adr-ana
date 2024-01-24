@@ -60,7 +60,7 @@ private:
 			{
 				swap( m_sbshcal_heclus_e[i], m_sbshcal_heclus_e[maxIndex] );
 				swap( m_sbshcal_heclus_atime[i], m_sbshcal_heclus_atime[maxIndex] );
-				swap( m_sbshcal_heclus_x[i], m_sbshcal_heclus_y[maxIndex] );
+				swap( m_sbshcal_heclus_x[i], m_sbshcal_heclus_x[maxIndex] );
 				swap( m_sbshcal_heclus_y[i], m_sbshcal_heclus_y[maxIndex] );
 			}			
 		}

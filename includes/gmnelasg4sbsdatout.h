@@ -25,8 +25,9 @@ private:
 	double m_simc_finalweight {0.}; // Final event weight for the SIMC generator.
 	double m_predhcal_xpos {0.};
 	double m_predhcal_ypos {0.};
+	bool m_pass_fiducialcut {false};
 	double m_bbtrvz {0.};
-	//	double m_bbtrth {0.};
+	// double m_bbtrth {0.};
 	// double m_bbtrx {0.};
 	double m_bbtrp{0.};
 	// double m_bbtrpx{0.};
@@ -82,7 +83,7 @@ private:
 	TH1D* m_h1_bb_eoverp;
 	TH1D* m_h1_hcalheclus_sh_atimediff;
 	TH1D* m_h1_hcalbestclus_e;
-	TH1D* m_h1_hcalbestclus_sh_atimediff;
+	TH1D* m_h1_hcalbestclus_sh_atimediff; 
 
 	// Variables for the SIMC simulation run info.
 	double m_simc_ntried {0.};
@@ -117,6 +118,7 @@ public:
 		m_resultstree->Branch("bb.sh.adctime", &m_shadctime);
 		m_resultstree->Branch("sbs.hcal.pred.x", &m_predhcal_xpos);
 		m_resultstree->Branch("sbs.hcal.pred.y", &m_predhcal_ypos);
+		m_resultstree->Branch("cut.passfiducial", &m_pass_fiducialcut);
 		m_resultstree->Branch("sbs.hcal.x", &m_sbshcalx);
 		m_resultstree->Branch("sbs.hcal.y", &m_sbshcaly);
 		m_resultstree->Branch("sbs.hcal.e", &m_sbshcale);
@@ -181,6 +183,7 @@ public:
 		if (m_is_simc) m_simc_finalweight = m_event.return_SimcFinalWeight();
 		m_predhcal_xpos = m_event.return_nHypthsPredx();
 		m_predhcal_ypos = m_event.return_nHypthsPredy();
+		m_pass_fiducialcut = m_event.return_passFiducialCut();
 		m_bbtrvz = m_event.return_BBTrVz();
 		// m_bbtrth = m_event.return_BBTrth();
 		// m_bbtrx = m_event.return_BBTrx();
@@ -289,6 +292,7 @@ public:
 		delete[] m_sbshcal_heclus_y;
 
 		m_fout->Close();
+
 		delete m_fout;
 	}
 

@@ -59,13 +59,13 @@ void gmn_elastics_g4sbs( const char* configfilename, const char* outputfilename 
 		double ana_percentage{(nevent/(double)nevents)*100}; //Percentage of events analyzed in the Event List.
 		print_analysis_percentage(ana_percentage, previousevent_ana_percentage_int);
 
-		if ( !event.passBigBiteCuts() ) continue;
+		if ( !event.passGoodElectronCuts() ) continue;
 
 		event.calcBBTrackAngles();
 		event.calcQ2andW2();
 		event.calcNeutronHypthsHCalIntersect();
-
-		if ( !event.passFiducialCut() ) continue;
+		event.checkFiducialCut();
+		//if ( !event.passFiducialCut() ) continue;
 
 		event.calcMCweight();
 

@@ -16,7 +16,7 @@ int getSIMCweightPar(const int jobnum, const char* csvfile_constchar, double& nT
 void makeSingleROOTfile(TString outputdirpath, const char* outfilenamepreint);
 
 
-void gmn_elastics_simc( const char* configfilename, const char* outputfilename = "gmn_elastics_simcdat" )
+void gmn_elastics_simc( const char* configfilename, TString outputfilenamepreint = "gmn_elastics_simcdat" )
 {
 
 	ConfigfileSIMC configfile{configfilename};
@@ -24,12 +24,11 @@ void gmn_elastics_simc( const char* configfilename, const char* outputfilename =
 	const std::vector<TString>& rootfile_vector = configfile.return_ROOTFileVector();
 	const TString csvfile = configfile.return_CSVFile();
 	const char* csvfile_constchar = csvfile.Data();
-	const char* simc_process = (configfile.return_SIMCprocess()).Data();
-	outputfilename = Form("%s_%s", outputfilename, simc_process);
+	const TString simc_process = configfile.return_SIMCprocess();
+	outputfilenamepreint.Append('_');
+	const TString outputfilenamepreint_withprocess = outputfilenamepreint.Append(simc_process);
 	const int num_SBSkine = configfile.return_SBSKineNum();
 	const TString target = configfile.return_Target();
-	// const double mc_beamcurrmicroamp = configfile.return_MCBeamCurrMicroAmp();
-	// const int mc_neventsgen = configfile.return_MCNeventsGen();
 	const double num_SBSFieldScale = configfile.return_SBSFieldScale();
 	// Copying cut thresholds to local variables //
 	const double cut_MinPreShE = configfile.return_MinPreShECut();
@@ -80,9 +79,8 @@ void gmn_elastics_simc( const char* configfilename, const char* outputfilename =
 		BestHCalClusForG4SBS bestHCalClus{ event, cut_CoinCutMean, cut_CoinCutSigma, cut_CoinCutSigmaFactor };
 
 		// Initialize an object from the "OutputG4SBS" class for analysis outputs. The last bool input variable must be set to "true" to indicate analysis with SIMC generated simulation data.
-		const char* currentrun_outfilenamepreint = Form("%s_job_%i", outputfilename, jobnum);
+		const char* currentrun_outfilenamepreint = Form("%s_job_%i", outputfilenamepreint_withprocess.Data(), jobnum);
 		OutputG4SBS output{ event, bestHCalClus, path_OutputDir, currentrun_outfilenamepreint, true };
-
 
 		//Variables to keep track of printout to the terminal.
 		int previousevent_ana_percentage_int{0};
@@ -98,14 +96,14 @@ void gmn_elastics_simc( const char* configfilename, const char* outputfilename =
 			double ana_percentage{(nevent/(double)nevents)*100}; //Percentage of events analyzed in the Event List.
 			print_analysis_percentage(ana_percentage, previousevent_ana_percentage_int);
 
-			if ( !event.passBigBiteCuts() ) continue; // Pre-shower E and all the track quality cuts applied using E arm data. 
+			if ( !event.passGoodElectronCuts() ) continue; // Pre-shower E and all the track quality cuts applied using E arm data. 
 
 			// *** Calculating the kinematics of the scattered electron and the hadron *** //
 			event.calcBBTrackAngles();
 			event.calcQ2andW2();
 			event.calcNeutronHypthsHCalIntersect(); 
-
-			if ( !event.passFiducialCut() ) continue;
+			event.checkFiducialCut();
+			//if ( !event.passFiducialCut() ) continue;
 
 			event.calcSIMCweight();
 
@@ -124,7 +122,7 @@ void gmn_elastics_simc( const char* configfilename, const char* outputfilename =
 
 	}
 
-	makeSingleROOTfile( path_OutputDir, outputfilename );
+	makeSingleROOTfile( path_OutputDir, outputfilenamepreint_withprocess );
 
 	std::cout << "\n--- Analysis Completed! ---\n";
 	std::cout << '\n';	
@@ -310,11 +308,11 @@ void makeSingleROOTfile( TString outputdirpath, const char* outfilenamepreint ) 
 	CS->SetBranchAddress("MC.simc.charge", &charge_simc);
 
 	int jobnum {0};
-	double totalt_charge {0.};
+	double total_charge {0.};
 	
 	while ( CS->GetEntry(jobnum++) )
 	{
-		totalt_charge += charge_simc;
+		total_charge += charge_simc;
 	}
 
 	TFile* finaloutrootfile = new TFile(Form("%s/%s_all.root", outputdirpath.Data(), outfilenamepreint), "RECREATE");
@@ -324,10 +322,13 @@ void makeSingleROOTfile( TString outputdirpath, const char* outfilenamepreint ) 
 
 	TTree* S = new TTree("S", "SIMC Simulation Info Tree");
 
-	S->Branch("MC.simc.charge", &totalt_charge);
+	S->Branch("MC.simc.charge", &total_charge);
 	S->Fill();	
 
-	finaloutrootfile->Write();
+	S->Write();
+	T->Write(0, TObject::kWriteDelete, 0);
+
+	//finaloutrootfile->Write();
 	finaloutrootfile->Close();
 	delete finaloutrootfile;
 }

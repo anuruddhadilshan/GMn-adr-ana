@@ -31,6 +31,8 @@ private:
 	double m_bbtrn{0};
 	const static int m_MAXNTRACKS {100};
 	const static int m_MAXHCALCLUS {10}; // #### MAY NEED TO INCREASE THIS IN PASS-2 ANALYSSIS! ###
+	double m_bbtrvx[m_MAXNTRACKS];
+	double m_bbtrvy[m_MAXNTRACKS];
 	double m_bbtrvz[m_MAXNTRACKS];
 	double m_bbtrth[m_MAXNTRACKS];
 	double m_bbtrx[m_MAXNTRACKS];
@@ -84,6 +86,8 @@ public:
 	{
 		m_C->SetBranchStatus("*", 0);
 		m_C->SetBranchStatus("bb.tr.n", 1);
+		m_C->SetBranchStatus("bb.tr.vx", 1);
+		m_C->SetBranchStatus("bb.tr.vy", 1);
 		m_C->SetBranchStatus("bb.tr.vz", 1);
 		m_C->SetBranchStatus("bb.tr.th", 1);
 		m_C->SetBranchStatus("bb.tr.x", 1);
@@ -111,6 +115,8 @@ public:
 		m_C->SetBranchStatus("bb.sh.atimeblk", 1);
 
 		m_C->SetBranchAddress("bb.tr.n", &m_bbtrn);
+		m_C->SetBranchAddress("bb.tr.vx", m_bbtrvx);
+		m_C->SetBranchAddress("bb.tr.vy", m_bbtrvy);
 		m_C->SetBranchAddress("bb.tr.vz", m_bbtrvz);
 		m_C->SetBranchAddress("bb.tr.th", m_bbtrth);
 		m_C->SetBranchAddress("bb.tr.x", m_bbtrx);
@@ -168,7 +174,7 @@ public:
 		return true;
 	}
 
-	bool passBigBiteCuts()
+	bool passGoodElectronCuts()
 	{	
 		// ***Track quality cuts*** //
 		if ( m_bbpse < m_cut_MinPreShE ) return false; // Pre-shower energy cut for pion rejection.
@@ -185,13 +191,13 @@ private:
 
 	double m_neutronhypthspred_x{0.}; // Calculated x hit position of the hadron under neutron hypothesis in HCal local detector coordinates.
 	double m_nuetronhypthspred_y{0.}; // Calculated y hit position of the hadron under neutron hypothesis in HCal local detector coordinates.
-	
+	bool m_passfiducialcut {false};
 
 public:
 
 	void calcNeutronHypthsHCalIntersect() // Calculates the point of intersection of the hadron, under the hyphothesis that it is neutron in HCal local coordinates.
 	{
-		m_hcalvect.calc_expected_xyonHCal( m_q, m_bbtrvz );
+		m_hcalvect.calc_expected_xyonHCal( m_q, m_bbtrvz, m_bbtrvx, m_bbtrvy);
 		m_neutronhypthspred_x = m_hcalvect.return_xexpected();
 		m_nuetronhypthspred_y = m_hcalvect.return_yexpected();
 	}
@@ -211,15 +217,10 @@ public:
 		}
 	}
 
-	// bool pass_WouldHitHCalCut()
-	// {
-	// 	if ( m_sbsneutronhcalx < m_hcal_active_xlow_safe || m_sbsneutronhcalx > m_hcal_active_xhigh_safe || m_sbsneutronhcaly < m_hcal_active_ylow_safe || m_sbsneutronhcaly > m_hcal_active_yhigh_safe )
-	// 	{
-	// 		return false;
-	// 	}
-
-	// 	return true;
-	// }
+	void checkFiducialCut() // Check whther the fiducial cut passed or failed and update the variable.
+	{
+		m_passfiducialcut = passFiducialCut();
+	}
 
 		
 private: 	
@@ -409,6 +410,11 @@ public:
 	double return_nHypthsPredy()
 	{
 		return m_nuetronhypthspred_y;
+	}
+
+	bool return_passFiducialCut()
+	{
+		return m_passfiducialcut;
 	}
 
 	double return_SBSHCalx()

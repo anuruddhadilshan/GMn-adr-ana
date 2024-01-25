@@ -58,13 +58,13 @@ void gmn_elastics_realdat( const char* configfilename, const char* outputfilenam
 		double ana_percentage{(nevent/(double)nevents)*100};
 		print_analysis_percentage(ana_percentage, previousevent_ana_percentage_int);
 
-		if ( !event.passBigBiteCuts() ) continue;
+		if ( !event.passGoodElectronCuts() ) continue;
 
 		event.calcBBTrackAngles();
 		event.calcQ2andW2();
 		event.calcNeutronHypthsHCalIntersect();
-
-		if ( !event.passFiducialCut() ) continue;
+		event.checkFiducialCut();
+		//if ( !event.passFiducialCut() ) continue;
 
 		bestHCalClus.findBestHCalClus();
 		event.getBestHCalClusIndx( bestHCalClus.return_BestHCalClusIndx() );

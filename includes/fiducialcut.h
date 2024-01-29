@@ -49,6 +49,7 @@ namespace FiducialCutConsts
 		{4, 1, 0, 0, 0, 0},
 		{4, 1, 30.0, 0, 0, 0},
 		{4, 0, 30.0, -0.758239, 0.199934, 0.0},
+		//{4, 0, 30.0, 0.0, 0.0, 0.0},
 		{4, 0, 50.0, -1.2097, 0.214125, 0.0},
 		{7, 0, 85.0, -0.798306, 0.144905, 0.0},
 		{8, 0, 0, 0, 0, 0},
@@ -237,7 +238,8 @@ private:
 	const double m_stddev_y;
 
 	// Constant factor to multiply std.dev for safetly margins.
-	const double m_stddev_factor;
+	const double m_stddev_factor_x;
+	const double m_stddev_factor_y;
 
 	// HCal boundaries with "double safety margins": Excluded one HCal block and a constat factor of std.dev of the dx and dy distributions. 
 	double m_hcal_xlow_ssafe {0.};
@@ -249,24 +251,24 @@ private:
 
 public:
 
-	FiducialCut( const int replayPassNum, const int sbsKineNum, const TString target, const double sbsFieldScale ) 
+	FiducialCut( const int replayPassNum, const int sbsKineNum, const TString target, const double sbsFieldScale, const double fidcutSafeFactorX = 0.0, const double fidcutSafeFactorY = 0.0 ) 
 	: m_protonDeflection{replayPassNum,sbsKineNum,target,sbsFieldScale}, m_avg_proton_deflection{m_protonDeflection.get_proton_deflection()},
 	m_stddev_x{m_protonDeflection.get_proton_deflection_stddev_x()}, m_stddev_y{m_protonDeflection.get_proton_deflection_stddev_y()}, 
-	m_stddev_factor{3.0}, m_targetintnum{static_cast<int>(m_protonDeflection.return_targetnum())}
+	m_stddev_factor_x{fidcutSafeFactorX}, m_stddev_factor_y{fidcutSafeFactorY}, m_targetintnum{static_cast<int>(m_protonDeflection.return_targetnum())}
 	{
 		if ( replayPassNum == 0 || replayPassNum == 1 ) // 
 		{
-			m_hcal_xlow_ssafe = HCalConst::hcal_active_xlow_safe_pass1 + m_stddev_factor*m_stddev_x;
-			m_hcal_xhigh_ssafe = HCalConst::hcal_active_xhigh_safe_pass1 - m_stddev_factor*m_stddev_x;
-			m_hcal_ylow_ssafe = HCalConst::hcal_active_ylow_safe_pass1 + m_stddev_factor*m_stddev_y;
-			m_hcal_yhigh_ssafe = HCalConst::hcal_active_yhigh_safe_pass1 - m_stddev_factor*m_stddev_y;
+			m_hcal_xlow_ssafe = HCalConst::hcal_active_xlow_safe_pass1 + m_stddev_factor_x*m_stddev_x;
+			m_hcal_xhigh_ssafe = HCalConst::hcal_active_xhigh_safe_pass1 - m_stddev_factor_x*m_stddev_x;
+			m_hcal_ylow_ssafe = HCalConst::hcal_active_ylow_safe_pass1 + m_stddev_factor_y*m_stddev_y;
+			m_hcal_yhigh_ssafe = HCalConst::hcal_active_yhigh_safe_pass1 - m_stddev_factor_y*m_stddev_y;
 		}
 		else if ( replayPassNum == 2 || replayPassNum == -1 ) // 
 		{
-			m_hcal_xlow_ssafe = HCalConst::hcal_active_xlow_safe_pass2 + m_stddev_factor*m_stddev_x;
-			m_hcal_xhigh_ssafe = HCalConst::hcal_active_xhigh_safe_pass2 - m_stddev_factor*m_stddev_x;
-			m_hcal_ylow_ssafe = HCalConst::hcal_active_ylow_safe_pass2 + m_stddev_factor*m_stddev_y;
-			m_hcal_yhigh_ssafe = HCalConst::hcal_active_yhigh_safe_pass2 - m_stddev_factor*m_stddev_y;
+			m_hcal_xlow_ssafe = HCalConst::hcal_active_xlow_safe_pass2 + m_stddev_factor_x*m_stddev_x;
+			m_hcal_xhigh_ssafe = HCalConst::hcal_active_xhigh_safe_pass2 - m_stddev_factor_x*m_stddev_x;
+			m_hcal_ylow_ssafe = HCalConst::hcal_active_ylow_safe_pass2 + m_stddev_factor_y*m_stddev_y;
+			m_hcal_yhigh_ssafe = HCalConst::hcal_active_yhigh_safe_pass2 - m_stddev_factor_y*m_stddev_y;
 		}
 	} 
 

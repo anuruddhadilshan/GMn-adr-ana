@@ -11,23 +11,26 @@ void subrange_ld2dxplots_gausfits( const char* rootfile, int dat_type = 1 ) // R
 	TTree* T = (TTree*)anarootfile->Get("T");
 
 	// Apply W2 and dy cuts to clean-up background from the dx plot.
-	const double cut_w2_low {0.2};
+	const double cut_w2_low {0.5};
 	const double cut_w2_high {1.2};
 	const double cut_dy_low {-0.5};
 	const double cut_dy_high {0.5};
 
 	T->SetBranchStatus("*", 0);
 	T->SetBranchStatus("e.kine.W2", 1);
+	T->SetBranchStatus("cut.passfiducial", 1);
 	T->SetBranchStatus("sbs.hcal.bestclus.dx", 1);
 	T->SetBranchStatus("sbs.hcal.bestclus.dy", 1);
 	if ( dat_type ) T->SetBranchStatus("MC.mc_weight", 1);
 
 	double w2 {0.};
+	bool pass_fiducial {false};
 	double dx {0.};
 	double dy {0.};
 	double mc_weight {0.};
 
 	T->SetBranchAddress("e.kine.W2", &w2);
+	T->SetBranchAddress("cut.passfiducial", &pass_fiducial);
 	T->SetBranchAddress("sbs.hcal.bestclus.dx", &dx);
 	T->SetBranchAddress("sbs.hcal.bestclus.dy", &dy);
 	if ( dat_type ) T->SetBranchAddress("MC.mc_weight", &mc_weight);
@@ -46,6 +49,7 @@ void subrange_ld2dxplots_gausfits( const char* rootfile, int dat_type = 1 ) // R
 		//////////////////////////////////////////////////////////////
 		if ( w2 < cut_w2_low || w2 > cut_w2_high ) continue; // W2 cut
 		//if ( dy < cut_dy_low || dy > cut_dy_high ) continue; // dy cut
+		if ( !pass_fiducial ) continue; // Fiducial cut.
 		//////////////////////////////////////////////////////////////
 		
 		h1_W2->Fill(w2);

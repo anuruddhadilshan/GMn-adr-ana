@@ -18,7 +18,7 @@ private:
 
 	double m_shadctime {0.};
 
-	const static int m_MAXHCALCLUS {10};		
+	const static int m_MAXHCALCLUS {20};		
 	double* m_sbshcal_heclus_e; 
 	double* m_sbshcal_heclus_atime; 
 	double* m_sbshcal_heclus_x; 

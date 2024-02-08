@@ -23,6 +23,8 @@ private:
 	double m_predhcal_xpos {0.};
 	double m_predhcal_ypos {0.};
 	bool m_pass_fiducialcut {false};
+	double m_hcalshcointime {0.};
+	bool m_pass_coincut {false};
 	double m_bbtrvz {0.};
 	//	double m_bbtrth {0.};
 	// double m_bbtrx {0.};
@@ -105,6 +107,8 @@ public:
 		m_resultstree->Branch("sbs.hcal.pred.x", &m_predhcal_xpos);
 		m_resultstree->Branch("sbs.hcal.pred.y", &m_predhcal_ypos);
 		m_resultstree->Branch("cut.passfiducial", &m_pass_fiducialcut);
+		m_resultstree->Branch("hcalshcointime", &m_hcalshcointime);
+		m_resultstree->Branch("cut.passcointime", &m_pass_coincut);
 		m_resultstree->Branch("sbs.hcal.x", &m_sbshcalx);
 		m_resultstree->Branch("sbs.hcal.y", &m_sbshcaly);
 		m_resultstree->Branch("sbs.hcal.e", &m_sbshcale);
@@ -187,6 +191,8 @@ public:
 		// m_bbphitgt = m_event.return_BBphitgt();
 		// m_bbpoltgt = m_event.return_BBpoltgt();		
 		// m_clusepoint = m_event.return_HCalClusE();	
+		m_hcalshcointime = m_event.return_CoinTime();
+		m_pass_coincut = m_event.return_passCoinCut();
 		m_thetapq_deg = m_event.return_thetapq_deg();
 		m_p_perp = m_event.return_pperp();
 	}

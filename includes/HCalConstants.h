@@ -22,6 +22,12 @@ namespace HCalConst
 	const double hcal_active_ylow_safe_pass1 = -4.5*hcalblk_w;
 	const double hcal_active_yhigh_safe_pass1 = 4.5*hcalblk_w;	
 	
+	//// Actual HCal boundaries for Pass2.
+	const double hcal_active_xlow = -0.75 - 12*hcalblk_h;
+	const double hcal_active_xhigh = -0.75 + 12*hcalblk_h;
+	const double hcal_active_ylow = -6*hcalblk_w;
+	const double hcal_active_yhigh = 6*hcalblk_w;
+
 	//// HCal boundaries with safety margins in HCal coordinate system, for *Pass2 and simulation* ////
 	// Safety margin = Exclude 1.5 rows/columns from the edges - Andrew suggestion.
 	const double hcal_active_xlow_safe_pass2 =  -0.75 - 10.5*hcalblk_h;

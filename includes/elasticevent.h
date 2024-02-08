@@ -26,11 +26,16 @@ private:
 	const double m_cut_MaxTrackChi2divNdof;
 	const double m_cut_VzCutUpStream;
 	const double m_cut_VzCutDwnStream;
+	const double m_cut_CoinCutMean;
+	const double m_cut_CoinCutSigam;
+	const double m_cut_CoinCutSigamFactor;
+	const double m_cut_CoinCutLowLimit;
+	const double m_cut_CoinCutHighLimit;
 		
 	// Variables needed to copy information from "T" tree.
 	double m_bbtrn{0};
 	const static int m_MAXNTRACKS {100};
-	const static int m_MAXHCALCLUS {10}; // #### MAY NEED TO INCREASE THIS IN PASS-2 ANALYSSIS! ###
+	const static int m_MAXHCALCLUS {20}; // #### MAY NEED TO INCREASE THIS IN PASS-2 ANALYSSIS! ###
 	double m_bbtrvx[m_MAXNTRACKS];
 	double m_bbtrvy[m_MAXNTRACKS];
 	double m_bbtrvz[m_MAXNTRACKS];
@@ -79,8 +84,9 @@ private:
 		
 public:
 
-	ElasticEvent(TChain* const C, const int num_ReplayPassNum, const int num_SBSKine, const TString target, const double num_SBSFieldScale,const double cut_MinPreShE, const double cut_MinGEMHitsOnTrack, const double cut_MinBBTrP, const double cut_MaxTrackChi2divNdof, const double cut_VzCutUpStream, double cut_VzCutDwnStream) 
+	ElasticEvent(TChain* const C, const int num_ReplayPassNum, const int num_SBSKine, const TString target, const double num_SBSFieldScale, const double cut_MinPreShE, const double cut_MinGEMHitsOnTrack, const double cut_MinBBTrP, const double cut_MaxTrackChi2divNdof, const double cut_VzCutUpStream, const double cut_VzCutDwnStream, const double cut_CoinCutMean, const double cut_CoinCutSigam, const double cut_CoinCutSigmaFactor) 
 	: m_C{C}, m_ReplayPassNum{num_ReplayPassNum}, m_SBSKineNum{num_SBSKine}, m_target{target}, m_SBSFieldScale{num_SBSFieldScale}, m_cut_MinPreShE{cut_MinPreShE}, m_cut_MinGEMHitsOnTrack{cut_MinGEMHitsOnTrack}, m_cut_MinBBTrP{cut_MinBBTrP}, m_cut_MaxTrackChi2divNdof{cut_MaxTrackChi2divNdof}, m_cut_VzCutUpStream{cut_VzCutUpStream}, m_cut_VzCutDwnStream{cut_VzCutDwnStream},
+	m_cut_CoinCutMean{cut_CoinCutMean}, m_cut_CoinCutSigam{cut_CoinCutSigam}, m_cut_CoinCutSigamFactor{cut_CoinCutSigmaFactor}, m_cut_CoinCutLowLimit{cut_CoinCutMean-(cut_CoinCutSigam*cut_CoinCutSigmaFactor)}, m_cut_CoinCutHighLimit{cut_CoinCutMean+(cut_CoinCutSigam*cut_CoinCutSigmaFactor)},
 	m_kininfo{num_SBSKine}, m_Ebeam{m_kininfo.return_BeamEnergy()}, m_HCaldist{m_kininfo.return_HCalDis()}, m_HCalangle{m_kininfo.return_HCalTheta()},
 	m_fiducialcut{m_ReplayPassNum,m_SBSKineNum,m_target,m_SBSFieldScale}, m_targetintnum{m_fiducialcut.return_targetintnum()}
 	{
@@ -240,6 +246,9 @@ private:
 	double m_sbsneutronhcaldx{0.}; // X coordinate difference between the measured and prediceted neutron position values. 
 	double m_sbsneutronhcaldy{0.}; // Y coordinate difference between the measured and prediceted neutron position values.	
 
+	double m_hcalshcointime{0.}; // Coin. time/time diff. between HCal best cluster and SH cluster.
+	bool m_passcointcut {false}; // Fass/Fail coint cut. 
+
 	double m_thetapq_rad {0.};
 	double m_thetapq_deg {0.};
 
@@ -266,6 +275,25 @@ public:
 	void getBestHCalClusIndx( int bestclus_indx )
 	{
 		m_sbshcal_bestclus_indx = bestclus_indx;
+	}
+
+	void calcCoinTime()
+	{
+		m_hcalshcointime = m_sbshcal_heclus_atime[m_sbshcal_bestclus_indx] - m_shadctime;
+	}
+
+	void checkCoinCut()
+	{
+		calcCoinTime(); // First calculate coin. time.
+
+		if ( m_hcalshcointime > m_cut_CoinCutLowLimit && m_hcalshcointime < m_cut_CoinCutHighLimit )
+		{
+			m_passcointcut = true;
+		}
+		else
+		{
+			m_passcointcut = false;
+		}
 	}
 
 	void make_p3Vector()
@@ -415,6 +443,16 @@ public:
 	bool return_passFiducialCut()
 	{
 		return m_passfiducialcut;
+	}
+
+	double return_CoinTime()
+	{
+		return m_hcalshcointime;
+	}
+
+	bool return_passCoinCut()
+	{
+		return m_passcointcut;
 	}
 
 	double return_SBSHCalx()

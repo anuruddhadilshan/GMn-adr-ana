@@ -59,24 +59,24 @@ void gmn_elastics_g4sbs( const char* configfilename, const char* outputfilename 
 		double ana_percentage{(nevent/(double)nevents)*100}; //Percentage of events analyzed in the Event List.
 		print_analysis_percentage(ana_percentage, previousevent_ana_percentage_int);
 
-		if ( !event.passGoodElectronCuts() ) continue;
+		if ( !event.passGoodElectronCuts() ) continue; // Good electron cuts.
 
+		bestHCalClus.findBestHCalClus();
+		if ( !event.passHCalActiveAreaCut() ) continue; //HCal active area cut.
+
+		// *** Calculating the kinematics of the scattered electron and the hadron *** //
 		event.calcBBTrackAngles();
 		event.calcQ2andW2();
 		event.calcNeutronHypthsHCalIntersect();
 		event.checkFiducialCut();
-		//if ( !event.passFiducialCut() ) continue;
-
+		
 		event.calcMCweight();
-
-		bestHCalClus.findBestHCalClus();
 
 		output.copyFromEvent();
 		output.fillOutTree();
 		output.fillHistos();
 	}
 
-	//output.makePlots();
 	output.closeOutFile();
 
 }

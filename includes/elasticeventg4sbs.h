@@ -353,6 +353,21 @@ public:
 		m_W2 = (m_Ptarg+m_q).M2(); // Calculates the invariant mass squared (W^2) of the virtual photon - nucleon system.		
 	}
 
+	bool passHCalActiveAreaCut(  )
+	{
+		double hcal_x = m_sbshcal_heclus_x[0];
+		double hcal_y = m_sbshcal_heclus_y[0];
+
+		if ( hcal_x > HCalConst::hcal_active_xlow_safe_pass2 && hcal_x < HCalConst::hcal_active_xhigh_safe_pass2 && hcal_y > HCalConst::hcal_active_ylow_safe_pass2 && hcal_y < HCalConst::hcal_active_yhigh_safe_pass2 )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	} 
+
 	void calcMCweight() // Calculating the event weight for the G4SBS generator.
 	{
 		m_mc_weight = ( m_mc_sigma * m_mc_omega * m_mc_luminosity ) / m_mc_neventsgen; // Only sigma and omega change event by event. Others are const and calculated in the constructor.

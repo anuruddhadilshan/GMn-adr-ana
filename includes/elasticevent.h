@@ -296,6 +296,21 @@ public:
 		}
 	}
 
+	bool passHCalActiveAreaCut(  )
+	{
+		double hcal_x = m_sbshcal_heclus_x[m_sbshcal_bestclus_indx];
+		double hcal_y = m_sbshcal_heclus_y[m_sbshcal_bestclus_indx];
+
+		if ( hcal_x > HCalConst::hcal_active_xlow_safe_pass2 && hcal_x < HCalConst::hcal_active_xhigh_safe_pass2 && hcal_y > HCalConst::hcal_active_ylow_safe_pass2 && hcal_y < HCalConst::hcal_active_yhigh_safe_pass2 )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	} 
+
 	void make_p3Vector()
 	{
 		ROOT::Math::XYZVector hcal_origintocluspos( m_sbshcalclusy[m_sbshcal_bestclus_indx], -m_sbshcalclusx[m_sbshcal_bestclus_indx], 0 );

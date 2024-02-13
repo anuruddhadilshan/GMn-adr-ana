@@ -34,7 +34,7 @@ void gmn_elastics_realdat( const char* configfilename, const char* outputfilenam
 	const TString path_OutputDir = configfile.return_OutputDir();
 	
 	// Initialize an object from the "ElasticEvent" class.
-	ElasticEvent event{ C, num_ReplayPassNum, num_SBSkine, target, num_SBSFieldScale, cut_MinPreShE, cut_MinGEMHitsOnTrack, cut_MinBBTrP, cut_MaxTrackChi2divNdof, cut_VzCutUpStream, cut_VzCutDwnStream };
+	ElasticEvent event{ C, num_ReplayPassNum, num_SBSkine, target, num_SBSFieldScale, cut_MinPreShE, cut_MinGEMHitsOnTrack, cut_MinBBTrP, cut_MaxTrackChi2divNdof, cut_VzCutUpStream, cut_VzCutDwnStream, cut_CoinCutMean, cut_CoinCutSigma, cut_CoinCutSigmaFactor };
 
 	// Initialize an object from the "BestHCalClus" class to find the "best" HCal cluster.
 	BestHCalClus bestHCalClus{ event, cut_CoinCutMean, cut_CoinCutSigma, cut_CoinCutSigmaFactor };
@@ -58,16 +58,19 @@ void gmn_elastics_realdat( const char* configfilename, const char* outputfilenam
 		double ana_percentage{(nevent/(double)nevents)*100};
 		print_analysis_percentage(ana_percentage, previousevent_ana_percentage_int);
 
-		if ( !event.passGoodElectronCuts() ) continue;
+		if ( !event.passGoodElectronCuts() ) continue; //Good electron cuts.
+
+		bestHCalClus.findBestHCalClus(); // Find best HCal cluster.
+		event.getBestHCalClusIndx( bestHCalClus.return_BestHCalClusIndx() );
+		if ( !event.passHCalActiveAreaCut() ) continue; //HCal active area cut.
 
 		event.calcBBTrackAngles();
 		event.calcQ2andW2();
 		event.calcNeutronHypthsHCalIntersect();
+		
 		event.checkFiducialCut();
-		//if ( !event.passFiducialCut() ) continue;
 
-		bestHCalClus.findBestHCalClus();
-		event.getBestHCalClusIndx( bestHCalClus.return_BestHCalClusIndx() );
+		event.checkCoinCut(); // Check whether the HCal and SH coincidence time cut is passed.
 
 		event.calcThetapq();
 		event.calcPperp();
@@ -77,9 +80,7 @@ void gmn_elastics_realdat( const char* configfilename, const char* outputfilenam
 		output.fillHistos();
 	}
 
-	//output.makePlots();
 	output.closeOutFile();
-
 }
 
 

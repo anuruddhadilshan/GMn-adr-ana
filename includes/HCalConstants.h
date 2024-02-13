@@ -3,8 +3,8 @@
 
 namespace HCalConst 
 {
-	const double hcalblk_h = 0.15494; // Height of all HCAL blocks in m from MC database
-	const double hcalblk_w = 0.15875; // Width of all HCAL blocks in m from MC database
+	const double hcalblk_h = 0.15875; // Height of all HCAL blocks in m from MC database
+	const double hcalblk_w = 0.15494; // Width of all HCAL blocks in m from MC database
 	const int Nhcal_rows = 24;
 	const int Nhcal_columns = 12;
 	const double hcal_width = hcalblk_w*Nhcal_columns; //1.905; // m
@@ -29,11 +29,11 @@ namespace HCalConst
 	const double hcal_active_yhigh = 6*hcalblk_w;
 
 	//// HCal boundaries with safety margins in HCal coordinate system, for *Pass2 and simulation* ////
-	// Safety margin = Exclude 1.5 rows/columns from the edges - Andrew suggestion.
-	const double hcal_active_xlow_safe_pass2 =  -0.75 - 10.5*hcalblk_h;
-	const double hcal_active_xhigh_safe_pass2 = -0.75 + 10.5*hcalblk_h;
-	const double hcal_active_ylow_safe_pass2 = -4.5*hcalblk_w;
-	const double hcal_active_yhigh_safe_pass2 = 4.5*hcalblk_w;	
+	// Safety margin = Exclude 1 rows/columns from the edges
+	const double hcal_active_xlow_safe_pass2 =  -0.75 - 11*hcalblk_h;
+	const double hcal_active_xhigh_safe_pass2 = -0.75 + 11*hcalblk_h;
+	const double hcal_active_ylow_safe_pass2 = -5*hcalblk_w;
+	const double hcal_active_yhigh_safe_pass2 = 5*hcalblk_w;	
 }
 
 

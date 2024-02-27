@@ -1,0 +1,9 @@
+ExperimentDat_ROOTfile /lustre19/expphy/volatile/halla/sbs/adr/gmn-ana/realdat-elastics/SBS4/pass2/LD2/elastics_2sigmafid_sbs4_30p.root
+SIMC_deen_ROOTfile /lustre19/expphy/volatile/halla/sbs/adr/gmn-ana/simc-elastics/SBS4/LD2/2sigmafid_0p390fs_sbs4_sbs30p_simc_deen_all.root
+SIMC_deep_ROOTfile /lustre19/expphy/volatile/halla/sbs/adr/gmn-ana/simc-elastics/SBS4/LD2/2sigmafid_0p390fs_sbs4_sbs30p_simc_deep_all.root
+#SIMC_deen_ROOTfile /lustre19/expphy/volatile/halla/sbs/adr/gmn-ana/simc-elastics/SBS4/LD2/385fs_sbs4_sbs30p_simc_deen_all.root
+#SIMC_deep_ROOTfile /lustre19/expphy/volatile/halla/sbs/adr/gmn-ana/simc-elastics/SBS4/LD2/385fs_sbs4_sbs30p_simc_deep_all.root
+W2_cut_min 0.4
+W2_cut_max 1.2
+dy_cut_min -0.5
+dy_cut_max 0.5
